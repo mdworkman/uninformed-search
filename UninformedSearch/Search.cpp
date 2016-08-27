@@ -26,10 +26,10 @@ int main()
 	int puzzle[SIZE][SIZE];
 	// The location of the zero (i.e. empty) tile.
 	int zero[2];
-	int count;
+	int count = 0;
 	while (in && count <= 8)
 	{
-		char temp;
+		char temp = '\0';
 		if (in >> temp)
 		{
 			if (temp == '_')
@@ -39,7 +39,10 @@ int main()
 				zero[1] = count++ % SIZE;
 			}
 			else
-				puzzle[count / SIZE][count++ % SIZE] = (int)temp;
+			{
+				puzzle[count / SIZE][count % SIZE] = (int)temp;
+				++count;
+			}
 		}
 	};
 
