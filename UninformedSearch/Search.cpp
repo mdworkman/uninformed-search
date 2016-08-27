@@ -34,7 +34,7 @@ struct Puzzle {
 				inversions += matches;
 			}
 		}
-		return inversions % 2;
+		return inversions % 2 == 0;
 	}
 };
 
