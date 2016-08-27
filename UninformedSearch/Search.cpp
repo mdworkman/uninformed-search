@@ -25,11 +25,14 @@ struct Puzzle {
 			const auto cell = &grid[i / N][i % N];
 			const auto val = *cell;
 
-			size_t matches = count_if(cell+1, &grid[N-1][N-1], [&val](const int& v) {
-				return v && v < val;
-			});
-			assert(matches < size - i);
-			inversions += matches;
+			// no tile is smaller than 1 (since blank tile is *always* ignored in this calculation
+			if (val > 1) {
+				size_t matches = count_if(cell+1, &grid[N-1][N-1], [&val](const int& v) {
+					return v && v < val;
+				});
+				assert(matches < size - i);
+				inversions += matches;
+			}
 		}
 		return inversions % 2;
 	}
