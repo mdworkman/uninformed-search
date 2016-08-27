@@ -40,7 +40,7 @@ int main()
 			}
 			else
 			{
-				puzzle[count / SIZE][count % SIZE] = (int)temp;
+				puzzle[count / SIZE][count % SIZE] = temp - '0';
 				++count;
 			}
 		}
