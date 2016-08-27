@@ -1,8 +1,41 @@
+#include <algorithm>
+#include <cassert>
 #include <string>
 #include <fstream>
 #include <iostream>
 
 using namespace std;
+
+template<size_t N>
+struct Puzzle {
+	int grid[N][N] = {};
+
+	decltype(grid[N])& operator[](size_t i)
+	{
+		return grid[i];
+	}
+
+	// we cant actually use this for anything but testing
+	bool HasSolution()
+	{
+		int inversions = grid[0][0] - 1;
+		const auto size = N*N;
+		for (auto i = 1; i < size - 1; ++i)
+		{
+			const auto cell = &grid[i / N][i % N];
+			const auto val = *cell;
+
+			size_t matches = count_if(cell+1, &grid[N-1][N-1], [&val](const int& v) {
+				return v && v < val;
+			});
+			assert(matches < size - i);
+			inversions += matches;
+		}
+		return inversions % 2;
+	}
+};
+
+using Puzzle8 = Puzzle<3>;
 
 int main()
 {
