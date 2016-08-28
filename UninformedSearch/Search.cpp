@@ -44,7 +44,7 @@ public:
 
 		iterator end()
 		{
-			return &state[N-1][N-1];
+			return &state[N-1][N-1] + 1;
 		}
 
 		iterator nth(size_t n)
