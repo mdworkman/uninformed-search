@@ -125,6 +125,11 @@ public:
 		// these asserts dont catch if there is more than one 0 so our puzzle may still be invalid
 	}
 
+	const PuzzleState& State()
+	{
+		return state;
+	}
+
 	auto operator[](size_t i) -> decltype(state[i])
 	{
 		return state[i];
@@ -133,6 +138,9 @@ public:
 	// we cant actually use this for anything but testing
 	bool HasSolution()
 	{
+		// FIXME: technically we should examine our goal state
+		// this is hardcoded for our particular goal state :(
+
 		int inversions = *state.begin() - 1;
 		for (auto i = 1; i < state.size - 1; ++i)
 		{
@@ -153,14 +161,59 @@ public:
 
 	bool Solve(/* probably need to pass a strategy */)
 	{
-		// not sure about any of this yet
+		enum MOVE {
+			NONE = 0,
+			UP,
+			DOWN,
+			LEFT,
+			RIGHT
+		};
 
 		struct Node {
+			Puzzle& puzzle;
+			const PuzzleState mystate;
+			const Node* parent = nullptr;
+			const size_t cost = 1;
+			const MOVE action = NONE;
 
+			// constructor for root node
+			Node(const Puzzle& puzzle)
+			: puzzle(puzzle), mystate(puzzle.State()) {}
+
+			// constructor for child nodes
+			Node(const Node& parent, MOVE action)
+			: puzzle(parent.puzzle), parent(&parent), cost(parent->cost + 1), action(action)
+			{
+				assert(action); // dont accept NONE as a valid sequence
+				switch (action)
+				{
+					case UP:
+						puzzle.MoveUp();
+						break;
+					case DOWN:
+						puzzle.MoveDown();
+						break;
+					case LEFT:
+						puzzle.MoveLeft();
+						break;
+					case RIGHT:
+						puzzle.MoveRight();
+						break;
+					default:
+						throw logic_error("Invalid movement command attempted");
+				}
+				mystate = puzzle.State();
+			}
 		};
+
+		// not sure about any of this yet
 
 		queue<Node> frontier;
 		unordered_set<Node> explored;
+
+		do {
+
+		} while (!IsSolved() && !frontier.empty());
 	}
 
 	bool IsSolved()
