@@ -51,6 +51,19 @@ public:
 		{
 			return &state[n / N][n % N];
 		}
+
+		friend ostream& operator<<(ostream& os, typename Puzzle<N>::PuzzleState& state)
+		{
+			for (auto i = 0; i < state.size; ++i)
+			{
+				if (i % state.n == 0) {
+					cout << endl;
+				}
+				cout << *state.nth(i);
+			}
+			cout << endl;
+			return os;
+		}
 	};
 
 private:
@@ -123,6 +136,13 @@ public:
 	{
 
 	}
+
+	friend ostream& operator<<(ostream& os, Puzzle<N>& puzzle)
+	{
+		os << puzzle.state;
+		os << puzzle.goal;
+		return os;
+	}
 };
 
 using Puzzle8 = Puzzle<3>;
@@ -176,6 +196,7 @@ int main()
 	}};
 	Puzzle8 puzzle(state, goal);
 
+	cout << puzzle << endl;
 	cout << puzzle.HasSolution() << endl;
 
 
