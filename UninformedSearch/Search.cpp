@@ -18,6 +18,27 @@ public:
 
 		int state[N][N] = {};
 
+		PuzzleState() = default;
+
+		PuzzleState(initializer_list<decltype(state)> l)
+		{
+			const int* start = &l.begin()[0][0][0];
+			copy(start, start + size, begin());
+		}
+
+		PuzzleState(PuzzleState& p)
+		{
+			copy(p.begin(), p.end(), begin());
+		}
+
+		PuzzleState& operator=(PuzzleState& p)
+		{
+			if (!&p == this) {
+				copy(p.begin(), p.end(), begin());
+			}
+			return *this;
+		}
+
 		decltype(state[N])& operator[](size_t i)
 		{
 			return state[i];
@@ -94,7 +115,7 @@ private:
 	}
 
 public:
-	Puzzle(PuzzleState initial, PuzzleState goal)
+	Puzzle(PuzzleState& initial, PuzzleState& goal)
 	: state(initial), goal(goal)
 	{
 		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
