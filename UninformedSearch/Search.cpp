@@ -33,7 +33,7 @@ public:
 
 		PuzzleState& operator=(const PuzzleState& p)
 		{
-			if (!&p == this) {
+			if (&p != this) {
 				copy(p.begin(), p.end(), begin());
 			}
 			return *this;
@@ -50,7 +50,7 @@ public:
 			// since each puzzle alwyas has the same numbers we only have to check n - 1
 			for (auto i = 0; i < size - 1; ++i)
 			{
-				if (*nth(i) != rhs.nth(i)) {
+				if (*nth(i) != *rhs.nth(i)) {
 					return false;
 				}
 			}
@@ -59,7 +59,7 @@ public:
 
 		size_t hash() const
 		{
-			static const auto lg = log2(size); // calculate only once
+			static const size_t lg = log2(size); // calculate only once
 
 			size_t h = 0;
 			for (auto i = 0; i < size; ++i)
