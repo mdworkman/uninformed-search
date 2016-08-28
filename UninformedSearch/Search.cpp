@@ -235,13 +235,53 @@ public:
 
 		// initialize the frontier with the start state
 		queue<Node> frontier( { Node(*this) } );
-		//unordered_set<Node> explored;
+
+		auto hasher=[](const Node& node){
+			return node.hash();
+		};
+
+		// FIXME: I've no idea what a good size table is
+		unordered_set<Node, decltype(hasher)> explored(1000, hasher);
+
+		cout << "Attempting to solve puzzle:" << endl << state << endl;
 
 		while (!IsSolved() && !frontier.empty()) {
 			Node& current = frontier.front();
 			frontier.pop();
+
+			if (explored.count(current)) {
+				// FIXME: it would be better to prevent duplicates in the frontier...
+				continue;
+			}
+
+			explored.insert(current);
+
+			// counterclockwise iteration?
+			Node up(current, UP);
+			if (explored.count(up) == 0) {
+				frontier.push(up);
+			}
+			if (IsSolved()) break;
+
+			Node left(current, LEFT);
+			if (explored.count(left) == 0) {
+				frontier.push(left);
+			}
+			if (IsSolved()) break;
+
+			Node down(current, DOWN);
+			if (explored.count(down) == 0) {
+				frontier.push(down);
+			}
+			if (IsSolved()) break;
+
+			Node right(current, RIGHT);
+			if (explored.count(right) == 0) {
+				frontier.push(right);
+			}
+			if (IsSolved()) break;
 		}
-		return false;
+		return IsSolved();
 	}
 
 	bool IsSolved() const
@@ -346,30 +386,11 @@ int main()
 	}};
 	Puzzle8 puzzle(state, goal);
 
-	// testing garbage
-	cout << puzzle << endl;
-	cout << "Move up" << endl;
-	puzzle.MoveUp();
-	cout << puzzle << endl;
-	cout << "Move up x2 then down" << endl;
-	puzzle.MoveUp();
-	puzzle.MoveUp();
-	puzzle.MoveDown();
-	cout << puzzle << endl;
-	cout << "Move left x2" << endl;
-	puzzle.MoveLeft();
-	puzzle.MoveLeft();
-	cout << puzzle << endl;
-	cout << "Move right x4" << endl;
-	puzzle.MoveRight();
-	puzzle.MoveRight();
-	puzzle.MoveRight();
-	puzzle.MoveRight();
-	cout << puzzle << endl;
-
-	cout << puzzle.HasSolution() << endl;
-
-	puzzle.Solve();
+	bool hasSolution = puzzle.HasSolution();
+	cout << "Puzzle has solution?: " << hasSolution << endl;
+	bool solved = puzzle.Solve();
+	cout << "Solved Puzzle:" << endl << puzzle << endl;
+	assert(solved == hasSolution);
 
 	return 0;
 }
