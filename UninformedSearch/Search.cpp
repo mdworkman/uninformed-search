@@ -26,12 +26,12 @@ public:
 			copy(start, start + size, begin());
 		}
 
-		PuzzleState(PuzzleState& p)
+		PuzzleState(const PuzzleState& p)
 		{
 			copy(p.begin(), p.end(), begin());
 		}
 
-		PuzzleState& operator=(PuzzleState& p)
+		PuzzleState& operator=(const PuzzleState& p)
 		{
 			if (!&p == this) {
 				copy(p.begin(), p.end(), begin());
@@ -57,7 +57,7 @@ public:
 			return true;
 		}
 
-		size_t hash()
+		size_t hash() const
 		{
 			static const auto lg = log2(size); // calculate only once
 
@@ -70,9 +70,15 @@ public:
 		}
 
 		using iterator = decltype(&state[0][0]);
+		using const_iterator = const int*;
 
 		// providing iterators so we can easily navigate the 2d array as a flat structure
 		iterator begin()
+		{
+			return &state[0][0];
+		}
+
+		const_iterator begin() const
 		{
 			return &state[0][0];
 		}
@@ -82,12 +88,22 @@ public:
 			return &state[N-1][N-1] + 1;
 		}
 
+		const_iterator end() const
+		{
+			return &state[N-1][N-1] + 1;
+		}
+
 		iterator nth(size_t n)
 		{
 			return &state[n / N][n % N];
 		}
 
-		friend ostream& operator<<(ostream& os, typename Puzzle<N>::PuzzleState& state)
+		const_iterator nth(size_t n) const
+		{
+			return &state[n / N][n % N];
+		}
+
+		friend ostream& operator<<(ostream& os, const typename Puzzle<N>::PuzzleState& state)
 		{
 			for (auto i = 0; i < state.size; ++i)
 			{
@@ -115,7 +131,7 @@ private:
 	}
 
 public:
-	Puzzle(PuzzleState& initial, PuzzleState& goal)
+	Puzzle(const PuzzleState& initial, const PuzzleState& goal)
 	: state(initial), goal(goal)
 	{
 		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
@@ -125,7 +141,7 @@ public:
 		// these asserts dont catch if there is more than one 0 so our puzzle may still be invalid
 	}
 
-	const PuzzleState& State()
+	const PuzzleState& State() const
 	{
 		return state;
 	}
@@ -136,7 +152,7 @@ public:
 	}
 
 	// we cant actually use this for anything but testing
-	bool HasSolution()
+	bool HasSolution() const
 	{
 		// FIXME: technically we should examine our goal state
 		// this is hardcoded for our particular goal state :(
@@ -216,7 +232,7 @@ public:
 		} while (!IsSolved() && !frontier.empty());
 	}
 
-	bool IsSolved()
+	bool IsSolved() const
 	{
 		return state == goal;
 	}
@@ -261,7 +277,7 @@ public:
 		return false;
 	}
 
-	friend ostream& operator<<(ostream& os, Puzzle<N>& puzzle)
+	friend ostream& operator<<(ostream& os, const Puzzle<N>& puzzle)
 	{
 		os << puzzle.state;
 		os << puzzle.goal;
