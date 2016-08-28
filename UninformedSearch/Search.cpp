@@ -187,18 +187,18 @@ public:
 
 		struct Node {
 			Puzzle& puzzle;
-			const PuzzleState mystate;
+			PuzzleState mystate;
 			const Node* parent = nullptr;
 			const size_t cost = 1;
-			const MOVE action = NONE;
+			const MOVE action;
 
 			// constructor for root node
-			Node(const Puzzle& puzzle)
-			: puzzle(puzzle), mystate(puzzle.State()) {}
+			Node(Puzzle& puzzle)
+			: puzzle(puzzle), mystate(puzzle.State()), action(MOVE::NONE) {}
 
 			// constructor for child nodes
 			Node(const Node& parent, MOVE action)
-			: puzzle(parent.puzzle), parent(&parent), cost(parent->cost + 1), action(action)
+			: puzzle(parent.puzzle), parent(&parent), cost(parent.cost + 1), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
 				switch (action)
@@ -220,16 +220,28 @@ public:
 				}
 				mystate = puzzle.State();
 			}
+
+			bool operator==(const Node& rhs) const
+			{
+				return mystate == rhs.mystate;
+			}
+
+			size_t hash() const
+			{
+				// we consider equality based on state alone
+				return mystate.hash();
+			}
 		};
 
-		// not sure about any of this yet
+		// initialize the frontier with the start state
+		queue<Node> frontier( { Node(*this) } );
+		//unordered_set<Node> explored;
 
-		queue<Node> frontier;
-		unordered_set<Node> explored;
-
-		do {
-
-		} while (!IsSolved() && !frontier.empty());
+		while (!IsSolved() && !frontier.empty()) {
+			Node& current = frontier.front();
+			frontier.pop();
+		}
+		return false;
 	}
 
 	bool IsSolved() const
@@ -359,7 +371,7 @@ int main()
 
 	cout << puzzle.HasSolution() << endl;
 
-
+	puzzle.Solve();
 
 	return 0;
 }
