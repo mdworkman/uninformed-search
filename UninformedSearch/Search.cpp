@@ -70,9 +70,25 @@ private:
 	PuzzleState state;
 	PuzzleState goal;
 
+	int* blank = nullptr;
+
+	void Swap(int* ptr)
+	{
+		swap(*ptr, *blank);
+		blank = ptr;
+		ptr = nullptr;
+	}
+
 public:
 	Puzzle(PuzzleState initial, PuzzleState goal)
-	: state(initial), goal(goal) {}
+	: state(initial), goal(goal)
+	{
+		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
+		assert(it != end(state)); // we must have a blank tile!
+		blank = &(*it);
+		assert(*blank == 0);
+		// these asserts dont catch if there is more than one 0 so our puzzle may still be invalid
+	}
 
 	auto operator[](size_t i) -> decltype(state[i])
 	{
@@ -119,22 +135,42 @@ public:
 
 	bool MoveUp()
 	{
-
+		int* swp = blank + state.n;
+		if (swp < state.end()) {
+			Swap(swp);
+			return true;
+		}
+		return false;
 	}
 
 	bool MoveDown()
 	{
-
+		int* swp = blank - state.n;
+		if (swp >= state.begin()) {
+			Swap(swp);;
+			return true;
+		}
+		return false;
 	}
 
 	bool MoveLeft()
 	{
-
+		int* swp = blank + 1;
+		if (swp < state.end() && (swp - state.begin()) % state.n != 0) {
+			Swap(swp);
+			return true;
+		}
+		return false;
 	}
 
 	bool MoveRight()
 	{
-
+		int* swp = blank - 1;
+		if (swp >= state.begin() && (state.end() - swp) % state.n != 1) {
+			Swap(swp);
+			return true;
+		}
+		return false;
 	}
 
 	friend ostream& operator<<(ostream& os, Puzzle<N>& puzzle)
@@ -196,7 +232,27 @@ int main()
 	}};
 	Puzzle8 puzzle(state, goal);
 
+	// testing garbage
 	cout << puzzle << endl;
+	cout << "Move up" << endl;
+	puzzle.MoveUp();
+	cout << puzzle << endl;
+	cout << "Move up x2 then down" << endl;
+	puzzle.MoveUp();
+	puzzle.MoveUp();
+	puzzle.MoveDown();
+	cout << puzzle << endl;
+	cout << "Move left x2" << endl;
+	puzzle.MoveLeft();
+	puzzle.MoveLeft();
+	cout << puzzle << endl;
+	cout << "Move right x4" << endl;
+	puzzle.MoveRight();
+	puzzle.MoveRight();
+	puzzle.MoveRight();
+	puzzle.MoveRight();
+	cout << puzzle << endl;
+
 	cout << puzzle.HasSolution() << endl;
 
 
