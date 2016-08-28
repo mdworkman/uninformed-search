@@ -25,7 +25,9 @@ public:
 
 		bool operator==(const PuzzleState& rhs) const
 		{
-			for (auto i = 0; i < size; ++i)
+			// we dont have to check *all* the elements
+			// since each puzzle alwyas has the same numbers we only have to check n - 1
+			for (auto i = 0; i < size - 1; ++i)
 			{
 				if (*nth(i) != rhs.nth(i)) {
 					return false;
