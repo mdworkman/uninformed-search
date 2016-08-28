@@ -107,7 +107,7 @@ public:
 		{
 			for (auto i = 0; i < state.size; ++i)
 			{
-				if (i % state.n == 0) {
+				if (i && i % state.n == 0) {
 					cout << endl;
 				}
 				cout << *state.nth(i);
@@ -291,9 +291,7 @@ public:
 
 	friend ostream& operator<<(ostream& os, const Puzzle<N>& puzzle)
 	{
-		os << puzzle.state;
-		os << puzzle.goal;
-		return os;
+		return os << puzzle.state << endl << puzzle.goal;
 	}
 };
 
