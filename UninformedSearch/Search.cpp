@@ -1,6 +1,6 @@
 #include <algorithm>
-#include <array>
 #include <cassert>
+#include <cmath>
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -34,6 +34,18 @@ public:
 				}
 			}
 			return true;
+		}
+
+		size_t hash()
+		{
+			static const auto lg = log2(size); // calculate only once
+
+			size_t h = 0;
+			for (auto i = 0; i < size; ++i)
+			{
+				h |= i << ((*nth(i)) * lg);
+			}
+			return h;
 		}
 
 		using iterator = decltype(&state[0][0]);
