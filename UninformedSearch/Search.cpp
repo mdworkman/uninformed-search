@@ -140,7 +140,7 @@ private:
 		blank = ptr;
 		ptr = nullptr;
 
-		cout << "new state:" << endl << state;
+		//cout << "new state:" << endl << state;
 	}
 
 public:
@@ -215,34 +215,31 @@ public:
 	bool Solve(/* probably need to pass a strategy */)
 	{
 		struct Node {
-			Puzzle& puzzle;
-			PuzzleState mystate;
+			PuzzleState state;
 			shared_ptr<const Node> parent;
 			const size_t cost = 1;
 			const MOVE action;
 
 			// constructor for root node
-			Node(Puzzle& puzzle)
-			: puzzle(puzzle), mystate(puzzle.State()), action(MOVE::NONE) {}
+			Node(const PuzzleState& state)
+			: state(state), action(MOVE::NONE) {}
 
 			// constructor for child nodes
 			Node(const Node& parent, MOVE action)
-			: puzzle(parent.puzzle), parent(make_shared<const Node>(parent)), cost(parent.cost + 1), action(action)
+			: parent(make_shared<const Node>(parent)), cost(parent.cost + 1), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
+				// less than ideal, but create a new puzzle with the parent state
+				// manipulate it, then destroy it
+				Puzzle puzzle(parent.state, parent.state);
 				puzzle.Move(action);
-				mystate = puzzle.State();
+				state = puzzle.State();
 			}
 
 			bool operator==(const Node& rhs) const
 			{
-				return mystate == rhs.mystate;
-			}
-
-			size_t hash() const
-			{
 				// we consider equality based on state alone
-				return mystate.hash();
+				return state == rhs.state;
 			}
 
 			void Trace() const
@@ -262,10 +259,10 @@ public:
 
 		using NodePtr = shared_ptr<Node>;
 		// initialize the frontier with the start state
-		queue<NodePtr> frontier( {  make_shared<Node>(Node(*this)) } );
+		queue<NodePtr> frontier( {  make_shared<Node>(Node(state)) } );
 
 		auto hasher=[](const NodePtr& nodeptr){
-			return nodeptr->hash();
+			return nodeptr->state.hash();
 		};
 
 		// FIXME: I've no idea what a good size table is
@@ -275,8 +272,9 @@ public:
 		cout << "Beginning timer" << endl;
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
-		while (!IsSolved() && !frontier.empty()) {
-			NodePtr current = frontier.front();
+		NodePtr current;
+		while (!frontier.empty()) {
+			current = frontier.front();
 			frontier.pop();
 
 			if (explored.count(current)) {
@@ -288,9 +286,11 @@ public:
 
 			#define CHECK_NODE(dir) \
 			if (CheckValidMove(dir)) { \
-				Node node_##dir(*current, dir); \
-				if (IsSolved()) break; \
-				auto node_##dir_ptr = make_shared<Node>(node_##dir); \
+				auto node_##dir_ptr = make_shared<Node>(Node(*current, dir)); \
+				if (node_##dir_ptr->state == goal) { \
+					current = node_##dir_ptr; \
+					break; \
+				} \
 				if (explored.count(node_##dir_ptr) == 0) { \
 					frontier.push(node_##dir_ptr); \
 				} \
@@ -311,9 +311,12 @@ public:
 		// FIXME: not sure what "expanded nodes" means
 		cout << "Nodes explored:" << explored.size() << endl;
 
+		// update puzzle to current state (even if not solved)
+		state = current->state;
+
 		if (IsSolved()) {
 			// output the steps
-			frontier.front()->Trace();
+			current->Trace();
 			return true;
 		}
 		return false;
@@ -373,7 +376,7 @@ public:
 
 	bool MoveUp()
 	{
-		cout << "move up" << endl;
+		//cout << "move up" << endl;
 		if (int* swp = GetMoveUp()) {
 			Swap(swp);
 			return true;
@@ -383,7 +386,7 @@ public:
 
 	bool MoveDown()
 	{
-		cout << "move down" << endl;
+		//cout << "move down" << endl;
 		if (int* swp = GetMoveDown()) {
 			Swap(swp);;
 			return true;
@@ -393,7 +396,7 @@ public:
 
 	bool MoveLeft()
 	{
-		cout << "move left" << endl;
+		//cout << "move left" << endl;
 		if (int* swp = GetMoveLeft()) {
 			Swap(swp);
 			return true;
@@ -403,7 +406,7 @@ public:
 
 	bool MoveRight()
 	{
-		cout << "move right" << endl;
+		//cout << "move right" << endl;
 		if (int* swp = GetMoveRight()) {
 			Swap(swp);
 			return true;
