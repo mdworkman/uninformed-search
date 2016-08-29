@@ -217,7 +217,7 @@ public:
 		struct Node {
 			Puzzle& puzzle;
 			PuzzleState mystate;
-			const Node* parent = nullptr;
+			shared_ptr<const Node> parent;
 			const size_t cost = 1;
 			const MOVE action;
 
@@ -227,7 +227,7 @@ public:
 
 			// constructor for child nodes
 			Node(const Node& parent, MOVE action)
-			: puzzle(parent.puzzle), parent(&parent), cost(parent.cost + 1), action(action)
+			: puzzle(parent.puzzle), parent(make_shared<const Node>(parent)), cost(parent.cost + 1), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
 				puzzle.Move(action);
@@ -259,22 +259,24 @@ public:
 			}
 		};
 
-		// initialize the frontier with the start state
-		queue<Node> frontier( { Node(*this) } );
 
-		auto hasher=[](const Node& node){
-			return node.hash();
+		using NodePtr = shared_ptr<Node>;
+		// initialize the frontier with the start state
+		queue<NodePtr> frontier( {  make_shared<Node>(Node(*this)) } );
+
+		auto hasher=[](const NodePtr& nodeptr){
+			return nodeptr->hash();
 		};
 
 		// FIXME: I've no idea what a good size table is
-		unordered_set<Node, decltype(hasher)> explored(1000, hasher);
+		unordered_set<NodePtr, decltype(hasher)> explored(1000, hasher);
 
 		cout << "Attempting to solve puzzle:" << endl << state << endl;
 		cout << "Beginning timer" << endl;
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 		while (!IsSolved() && !frontier.empty()) {
-			Node& current = frontier.front();
+			NodePtr current = frontier.front();
 			frontier.pop();
 
 			if (explored.count(current)) {
@@ -286,10 +288,11 @@ public:
 
 			#define CHECK_NODE(dir) \
 			if (CheckValidMove(dir)) { \
-				Node node_##dir(current, dir); \
+				Node node_##dir(*current, dir); \
 				if (IsSolved()) break; \
-				if (explored.count(node_##dir) == 0) { \
-					frontier.push(node_##dir); \
+				auto node_##dir_ptr = make_shared<Node>(node_##dir); \
+				if (explored.count(node_##dir_ptr) == 0) { \
+					frontier.push(node_##dir_ptr); \
 				} \
 			}
 
@@ -310,7 +313,7 @@ public:
 
 		if (IsSolved()) {
 			// output the steps
-			frontier.front().Trace();
+			frontier.front()->Trace();
 			return true;
 		}
 		return false;
