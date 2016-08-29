@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cmath>
 #include <string>
 #include <fstream>
@@ -231,6 +232,19 @@ public:
 				// we consider equality based on state alone
 				return mystate.hash();
 			}
+
+			void Trace() const
+			{
+				if (parent) {
+					parent->Trace();
+
+					static const char* symbols[] = {"", "↑","↓","←","→"};
+					cout << symbols[action] << endl;
+
+				} else {
+					cout << "Path taken to solve:" << endl;
+				}
+			}
 		};
 
 		// initialize the frontier with the start state
@@ -244,6 +258,8 @@ public:
 		unordered_set<Node, decltype(hasher)> explored(1000, hasher);
 
 		cout << "Attempting to solve puzzle:" << endl << state << endl;
+		cout << "Beginning timer" << endl;
+		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 		while (!IsSolved() && !frontier.empty()) {
 			Node& current = frontier.front();
@@ -281,7 +297,19 @@ public:
 			}
 			if (IsSolved()) break;
 		}
-		return IsSolved();
+
+		cout << "Finished: stopping timer." << endl;
+		chrono::steady_clock::time_point end = chrono::steady_clock::now();
+		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
+		// FIXME: not sure what "expanded nodes" means
+		cout << "Nodes explored:" << explored.size() << endl;
+
+		if (IsSolved()) {
+			// output the steps
+			frontier.front().Trace();
+			return true;
+		}
+		return false;
 	}
 
 	bool IsSolved() const
@@ -331,7 +359,7 @@ public:
 
 	friend ostream& operator<<(ostream& os, const Puzzle<N>& puzzle)
 	{
-		return os << puzzle.state << endl << puzzle.goal;
+		return os << puzzle.state << endl;// << puzzle.goal;
 	}
 };
 
