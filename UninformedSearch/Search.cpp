@@ -258,30 +258,20 @@ public:
 
 			explored.insert(current);
 
+			#define CHECK_NODE(dir) \
+			Node node_##dir(current, dir); \
+			if (explored.count(node_##dir) == 0) { \
+				frontier.push(node_##dir); \
+			} \
+			if (IsSolved()) break;
+
 			// counterclockwise iteration?
-			Node up(current, UP);
-			if (explored.count(up) == 0) {
-				frontier.push(up);
-			}
-			if (IsSolved()) break;
+			CHECK_NODE(UP);
+			CHECK_NODE(LEFT);
+			CHECK_NODE(DOWN);
+			CHECK_NODE(RIGHT);
 
-			Node left(current, LEFT);
-			if (explored.count(left) == 0) {
-				frontier.push(left);
-			}
-			if (IsSolved()) break;
-
-			Node down(current, DOWN);
-			if (explored.count(down) == 0) {
-				frontier.push(down);
-			}
-			if (IsSolved()) break;
-
-			Node right(current, RIGHT);
-			if (explored.count(right) == 0) {
-				frontier.push(right);
-			}
-			if (IsSolved()) break;
+			#undef CHECK_NODE
 		}
 
 		cout << "Finished: stopping timer." << endl;
