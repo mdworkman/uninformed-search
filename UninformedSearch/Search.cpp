@@ -139,6 +139,8 @@ private:
 		swap(*ptr, *blank);
 		blank = ptr;
 		ptr = nullptr;
+
+		cout << "new state:" << endl << state;
 	}
 
 public:
@@ -325,6 +327,7 @@ public:
 
 	bool MoveUp()
 	{
+		cout << "move up" << endl;
 		int* swp = blank + state.n;
 		if (swp < state.end()) {
 			Swap(swp);
@@ -335,6 +338,7 @@ public:
 
 	bool MoveDown()
 	{
+		cout << "move down" << endl;
 		int* swp = blank - state.n;
 		if (swp >= state.begin()) {
 			Swap(swp);;
@@ -345,6 +349,7 @@ public:
 
 	bool MoveLeft()
 	{
+		cout << "move left" << endl;
 		int* swp = blank + 1;
 		if (swp < state.end() && (swp - state.begin()) % state.n != 0) {
 			Swap(swp);
@@ -355,6 +360,7 @@ public:
 
 	bool MoveRight()
 	{
+		cout << "move right" << endl;
 		int* swp = blank - 1;
 		if (swp >= state.begin() && (state.end() - swp) % state.n != 1) {
 			Swap(swp);
@@ -370,6 +376,26 @@ public:
 };
 
 using Puzzle8 = Puzzle<3>;
+
+void AnalyzePuzzle(Puzzle8& puzzle)
+{
+	bool hasSolution = puzzle.HasSolution();
+	cout << "Puzzle has solution?: " << hasSolution << endl;
+	bool solved = puzzle.Solve();
+	cout << "Solved Puzzle:" << endl << puzzle << endl;
+	assert(solved == hasSolution);
+}
+
+void Tests(const Puzzle8::PuzzleState& goal)
+{
+	cout << "Running tests" << endl;
+	cout << goal << endl;
+	Puzzle8 testPuzzle(goal, goal);
+	testPuzzle.Scramble(10);
+	assert(testPuzzle.HasSolution());
+
+	AnalyzePuzzle(testPuzzle);
+}
 
 int main()
 {
@@ -418,16 +444,11 @@ int main()
 		{ 4, 5, 6 },
 		{ 7, 8, 0 }
 	}};
-	//Puzzle8 puzzle(state, goal);
 
-	Puzzle8 puzzle(goal, goal);
-	puzzle.Scramble(50);
+	Tests(goal);
 
-	bool hasSolution = puzzle.HasSolution();
-	cout << "Puzzle has solution?: " << hasSolution << endl;
-	bool solved = puzzle.Solve();
-	cout << "Solved Puzzle:" << endl << puzzle << endl;
-	assert(solved == hasSolution);
+	Puzzle8 puzzle(state, goal);
+	AnalyzePuzzle(puzzle);
 
 	return 0;
 }
