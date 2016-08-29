@@ -2,11 +2,13 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
-#include <string>
 #include <fstream>
 #include <iostream>
-#include <unordered_set>
 #include <queue>
+#include <random>
+#include <string>
+#include <unordered_set>
+
 
 using namespace std;
 
@@ -119,6 +121,14 @@ public:
 	};
 
 private:
+	enum MOVE {
+		NONE = 0,
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT
+	};
+
 	PuzzleState state;
 	PuzzleState goal;
 
@@ -178,14 +188,6 @@ public:
 
 	bool Solve(/* probably need to pass a strategy */)
 	{
-		enum MOVE {
-			NONE = 0,
-			UP,
-			DOWN,
-			LEFT,
-			RIGHT
-		};
-
 		struct Node {
 			Puzzle& puzzle;
 			PuzzleState mystate;
@@ -202,23 +204,7 @@ public:
 			: puzzle(parent.puzzle), parent(&parent), cost(parent.cost + 1), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
-				switch (action)
-				{
-					case UP:
-						puzzle.MoveUp();
-						break;
-					case DOWN:
-						puzzle.MoveDown();
-						break;
-					case LEFT:
-						puzzle.MoveLeft();
-						break;
-					case RIGHT:
-						puzzle.MoveRight();
-						break;
-					default:
-						throw logic_error("Invalid movement command attempted");
-				}
+				puzzle.Move(action);
 				mystate = puzzle.State();
 			}
 
@@ -317,6 +303,36 @@ public:
 		return state == goal;
 	}
 
+	// scramble the puzzle by i moves
+	// great for loading a solved puzzle and scrambling for testing
+	void Scramble(size_t i)
+	{
+		while (i--) {
+			random_device rd;     // only used once to initialise (seed) engine
+			mt19937 rng(rd());    // random-number engine used (Mersenne-Twister in this case)
+			uniform_int_distribution<int> uni(UP, RIGHT); // guaranteed unbiased
+
+			Move(static_cast<MOVE>(uni(rng)));
+		}
+	}
+
+	bool Move(MOVE m)
+	{
+		switch (m)
+		{
+			case UP:
+				return MoveUp();
+			case DOWN:
+				return MoveDown();
+			case LEFT:
+				return MoveLeft();
+			case RIGHT:
+				return MoveRight();
+			default:
+				throw logic_error("Invalid movement command attempted");
+		}
+	}
+
 	bool MoveUp()
 	{
 		int* swp = blank + state.n;
@@ -412,7 +428,10 @@ int main()
 		{ 4, 5, 6 },
 		{ 7, 8, 0 }
 	}};
-	Puzzle8 puzzle(state, goal);
+	//Puzzle8 puzzle(state, goal);
+
+	Puzzle8 puzzle(goal, goal);
+	puzzle.Scramble(50);
 
 	bool hasSolution = puzzle.HasSolution();
 	cout << "Puzzle has solution?: " << hasSolution << endl;
