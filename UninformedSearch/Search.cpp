@@ -154,6 +154,30 @@ public:
 		// these asserts dont catch if there is more than one 0 so our puzzle may still be invalid
 	}
 
+	int* GetMoveUp()
+	{
+		int* swp = blank + state.n;
+		return (swp < state.end()) ? swp : nullptr;
+	}
+
+	int* GetMoveDown()
+	{
+		int* swp = blank - state.n;
+		return (swp >= state.begin()) ? swp : nullptr;
+	}
+
+	int* GetMoveLeft()
+	{
+		int* swp = blank + 1;
+		return (swp < state.end() && (swp - state.begin()) % state.n != 0) ? swp : nullptr;
+	}
+
+	int* GetMoveRight()
+	{
+		int* swp = blank - 1;
+		return (swp >= state.begin() && (state.end() - swp) % state.n != 1) ? swp : nullptr;
+	}
+
 	const PuzzleState& State() const
 	{
 		return state;
@@ -261,11 +285,13 @@ public:
 			explored.insert(current);
 
 			#define CHECK_NODE(dir) \
-			Node node_##dir(current, dir); \
-			if (explored.count(node_##dir) == 0) { \
-				frontier.push(node_##dir); \
-			} \
-			if (IsSolved()) break;
+			if (CheckValidMove(dir)) { \
+				Node node_##dir(current, dir); \
+				if (IsSolved()) break; \
+				if (explored.count(node_##dir) == 0) { \
+					frontier.push(node_##dir); \
+				} \
+			}
 
 			// counterclockwise iteration?
 			CHECK_NODE(UP);
@@ -308,6 +334,23 @@ public:
 		}
 	}
 
+	bool CheckValidMove(MOVE m)
+	{
+		switch (m)
+		{
+			case UP:
+				return GetMoveUp();
+			case DOWN:
+				return GetMoveDown();
+			case LEFT:
+				return GetMoveLeft();
+			case RIGHT:
+				return GetMoveRight();
+			default:
+				throw logic_error("Invalid movement command attempted");
+		}
+	}
+
 	bool Move(MOVE m)
 	{
 		switch (m)
@@ -328,8 +371,7 @@ public:
 	bool MoveUp()
 	{
 		cout << "move up" << endl;
-		int* swp = blank + state.n;
-		if (swp < state.end()) {
+		if (int* swp = GetMoveUp()) {
 			Swap(swp);
 			return true;
 		}
@@ -339,8 +381,7 @@ public:
 	bool MoveDown()
 	{
 		cout << "move down" << endl;
-		int* swp = blank - state.n;
-		if (swp >= state.begin()) {
+		if (int* swp = GetMoveDown()) {
 			Swap(swp);;
 			return true;
 		}
@@ -350,8 +391,7 @@ public:
 	bool MoveLeft()
 	{
 		cout << "move left" << endl;
-		int* swp = blank + 1;
-		if (swp < state.end() && (swp - state.begin()) % state.n != 0) {
+		if (int* swp = GetMoveLeft()) {
 			Swap(swp);
 			return true;
 		}
@@ -361,8 +401,7 @@ public:
 	bool MoveRight()
 	{
 		cout << "move right" << endl;
-		int* swp = blank - 1;
-		if (swp >= state.begin() && (state.end() - swp) % state.n != 1) {
+		if (int* swp = GetMoveRight()) {
 			Swap(swp);
 			return true;
 		}
