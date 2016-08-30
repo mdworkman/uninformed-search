@@ -281,20 +281,18 @@ public:
 			current = frontier.front();
 			frontier.pop();
 
+			if (explored.count(current)) {
+				continue;
+			}
+
 			explored.insert(current);
 
 			if (current->state == goal) break;
 
 			#define CHECK_NODE(dir) \
-			if (CheckValidMove(dir)) { \
-				auto node_##dir_ptr = make_shared<Node>(Node(*current, dir)); \
-				if (node_##dir_ptr->state == goal) { \
-					current = node_##dir_ptr; \
-					break; \
-				} \
-				if (explored.count(node_##dir_ptr) == 0) { \
-					frontier.push(node_##dir_ptr); \
-				} \
+			auto node_##dir = make_shared<Node>(Node(*current, dir)); \
+			if (explored.count(node_##dir) == 0) { \
+				frontier.push(node_##dir); \
 			}
 
 			// counterclockwise iteration?
@@ -313,7 +311,8 @@ public:
 		cout << "Nodes explored:" << explored.size() << endl;
 
 		// update puzzle to current state (even if not solved)
-		state = current->state;
+		if (current)
+			state = current->state;
 
 		if (IsSolved()) {
 			// output the steps
