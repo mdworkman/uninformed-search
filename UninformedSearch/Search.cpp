@@ -78,22 +78,22 @@ public:
 		// providing iterators so we can easily navigate the 2d array as a flat structure
 		iterator begin()
 		{
-			return &state[0][0];
+			return (int*)&state;
 		}
 
 		const_iterator begin() const
 		{
-			return &state[0][0];
+			return (int*)&state;
 		}
 
 		iterator end()
 		{
-			return &state[N-1][N-1] + 1;
+			return begin() + size;
 		}
 
 		const_iterator end() const
 		{
-			return &state[N-1][N-1] + 1;
+			return begin() + size;
 		}
 
 		iterator nth(size_t n)
