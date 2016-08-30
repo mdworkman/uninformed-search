@@ -277,12 +277,9 @@ public:
 			current = frontier.front();
 			frontier.pop();
 
-			if (explored.count(current)) {
-				// FIXME: it would be better to prevent duplicates in the frontier...
-				continue;
-			}
-
 			explored.insert(current);
+
+			if (current->state == goal) break;
 
 			#define CHECK_NODE(dir) \
 			if (CheckValidMove(dir)) { \
