@@ -241,14 +241,17 @@ public:
 				return state == rhs.state;
 			}
 
-			void Trace() const
+			void Trace(size_t i) const
 			{
 				if (parent) {
-					parent->Trace();
+					if (i == 0)
+						cout << "Truncated trace route:" << endl;
+					else {
+						parent->Trace(--i);
 
-					static const char* symbols[] = {"", "↑","↓","←","→"};
-					cout << symbols[action] << endl;
-
+						static const char* symbols[] = {"", "↑","↓","←","→"};
+						cout << symbols[action] << endl;
+					}
 				} else {
 					cout << "Path taken to solve:" << endl;
 				}
@@ -315,7 +318,7 @@ public:
 
 		if (IsSolved(goal)) {
 			// output the steps
-			current->Trace();
+			current->Trace(100);
 			return true;
 		}
 		return false;
