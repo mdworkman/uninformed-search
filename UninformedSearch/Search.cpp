@@ -265,8 +265,12 @@ public:
 			return nodeptr->state.hash();
 		};
 
+		auto equals=[](const NodePtr& n1, const NodePtr& n2){
+			return *n1 == *n2;
+		};
+
 		// FIXME: I've no idea what a good size table is
-		unordered_set<NodePtr, decltype(hasher)> explored(1000, hasher);
+		unordered_set<NodePtr, decltype(hasher), decltype(equals)> explored(1000, hasher, equals);
 
 		cout << "Attempting to solve puzzle:" << endl << state << endl;
 		cout << "Beginning timer" << endl;
