@@ -78,12 +78,12 @@ public:
 		// providing iterators so we can easily navigate the 2d array as a flat structure
 		iterator begin()
 		{
-			return (int*)&state;
+			return (iterator)&state;
 		}
 
 		const_iterator begin() const
 		{
-			return (int*)&state;
+			return (const_iterator)&state;
 		}
 
 		iterator end()
@@ -130,7 +130,6 @@ private:
 	};
 
 	PuzzleState state;
-	PuzzleState goal;
 
 	int* blank = nullptr;
 
@@ -144,8 +143,8 @@ private:
 	}
 
 public:
-	Puzzle(const PuzzleState& initial, const PuzzleState& goal)
-	: state(initial), goal(goal)
+	Puzzle(const PuzzleState& initial)
+	: state(initial)
 	{
 		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
 		assert(it != end(state)); // we must have a blank tile!
@@ -212,7 +211,7 @@ public:
 		return inversions % 2 == 0;
 	}
 
-	bool Solve(/* probably need to pass a strategy */)
+	bool Solve(const PuzzleState& goal/* probably need to pass a strategy */)
 	{
 		struct Node {
 			PuzzleState state;
@@ -231,7 +230,7 @@ public:
 				assert(action); // dont accept NONE as a valid sequence
 				// less than ideal, but create a new puzzle with the parent state
 				// manipulate it, then destroy it
-				Puzzle puzzle(parent.state, parent.state);
+				Puzzle puzzle(parent.state);
 				puzzle.Move(action);
 				state = puzzle.State();
 			}
@@ -314,7 +313,7 @@ public:
 		if (current)
 			state = current->state;
 
-		if (IsSolved()) {
+		if (IsSolved(goal)) {
 			// output the steps
 			current->Trace();
 			return true;
@@ -322,7 +321,7 @@ public:
 		return false;
 	}
 
-	bool IsSolved() const
+	bool IsSolved(const PuzzleState& goal) const
 	{
 		return state == goal;
 	}
@@ -422,11 +421,11 @@ public:
 
 using Puzzle8 = Puzzle<3>;
 
-void AnalyzePuzzle(Puzzle8& puzzle)
+void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution();
 	cout << "Puzzle has solution?: " << hasSolution << endl;
-	bool solved = puzzle.Solve();
+	bool solved = puzzle.Solve(goal);
 	cout << "Solved Puzzle:" << endl << puzzle << endl;
 	assert(solved == hasSolution);
 }
@@ -435,11 +434,11 @@ void Tests(const Puzzle8::PuzzleState& goal)
 {
 	cout << "Running tests" << endl;
 	cout << goal << endl;
-	Puzzle8 testPuzzle(goal, goal);
+	Puzzle8 testPuzzle(goal);
 	testPuzzle.Scramble(10);
 	assert(testPuzzle.HasSolution());
 
-	AnalyzePuzzle(testPuzzle);
+	AnalyzePuzzle(testPuzzle, goal);
 }
 
 int main()
@@ -492,8 +491,8 @@ int main()
 
 	Tests(goal);
 
-	Puzzle8 puzzle(state, goal);
-	AnalyzePuzzle(puzzle);
+	Puzzle8 puzzle(state);
+	AnalyzePuzzle(puzzle, goal);
 
 	return 0;
 }
