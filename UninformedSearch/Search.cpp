@@ -121,14 +121,6 @@ public:
 	};
 
 private:
-	enum MOVE {
-		NONE = 0,
-		UP,
-		DOWN,
-		LEFT,
-		RIGHT
-	};
-
 	PuzzleState state;
 
 	int* blank = nullptr;
@@ -143,6 +135,14 @@ private:
 	}
 
 public:
+	enum MOVE {
+		NONE = 0,
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT
+	};
+
 	Puzzle(const PuzzleState& initial)
 	: state(initial)
 	{
