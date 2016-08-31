@@ -215,7 +215,7 @@ public:
 	{
 		struct Node {
 			PuzzleState state;
-			shared_ptr<const Node> parent;
+			const Node* parent = nullptr;
 			const size_t cost = 1;
 			const MOVE action;
 
@@ -225,7 +225,7 @@ public:
 
 			// constructor for child nodes
 			Node(const Node& parent, MOVE action)
-			: parent(make_shared<const Node>(parent)), cost(parent.cost + 1), action(action)
+			: parent(&parent), cost(parent.cost + 1), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
 				// less than ideal, but create a new puzzle with the parent state
