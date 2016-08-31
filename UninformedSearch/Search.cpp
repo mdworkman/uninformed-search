@@ -281,7 +281,8 @@ public:
 		using NodePtr = shared_ptr<Node>;
 		// initialize the frontier with the start state
 		Strategy<NodePtr> frontier;
-		frontier.Enqueue(make_shared<Node>(Node(state)));
+		NodePtr current = make_shared<Node>(Node(state));
+		frontier.Enqueue(current);
 
 		auto hasher=[](const NodePtr& nodeptr){
 			return nodeptr->state.hash();
@@ -298,7 +299,6 @@ public:
 		cout << "Beginning timer" << endl;
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
-		NodePtr current;
 		while (!frontier.Finished()) {
 			current = frontier.Next();
 			frontier.Dequeue();
@@ -331,10 +331,10 @@ public:
 		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
 		// FIXME: not sure what "expanded nodes" means
 		cout << "Nodes explored:" << explored.size() << endl;
+		cout << "Depth of solution:" << current->cost << endl;
 
 		// update puzzle to current state (even if not solved)
-		if (current)
-			state = current->state;
+		state = current->state;
 
 		if (IsSolved(goal)) {
 			// output the steps
