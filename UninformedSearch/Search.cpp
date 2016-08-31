@@ -16,6 +16,14 @@ using namespace std;
 template<size_t N>
 class Puzzle {
 public:
+	enum MOVE {
+		NONE = 0,
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT
+	};
+
 	struct PuzzleState {
 		static constexpr auto n = N;
 		static constexpr auto size = N*N;
@@ -135,25 +143,6 @@ private:
 		//cout << "new state:" << endl << state;
 	}
 
-public:
-	enum MOVE {
-		NONE = 0,
-		UP,
-		DOWN,
-		LEFT,
-		RIGHT
-	};
-
-	Puzzle(const PuzzleState& initial)
-	: state(initial)
-	{
-		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
-		assert(it != end(state)); // we must have a blank tile!
-		blank = &(*it);
-		assert(*blank == 0);
-		// these asserts dont catch if there is more than one 0 so our puzzle may still be invalid
-	}
-
 	int* GetMoveUp()
 	{
 		int* swp = blank + state.n;
@@ -176,6 +165,35 @@ public:
 	{
 		int* swp = blank - 1;
 		return (swp >= state.begin() && (state.end() - swp) % state.n != 1) ? swp : nullptr;
+	}
+
+	int* GetMove(MOVE m)
+	{
+		switch (m)
+		{
+			case UP:
+				return GetMoveUp();
+			case DOWN:
+				return GetMoveDown();
+			case LEFT:
+				return GetMoveLeft();
+			case RIGHT:
+				return GetMoveRight();
+			default:
+				throw logic_error("Invalid movement command attempted");
+		}
+	}
+
+public:
+
+	Puzzle(const PuzzleState& initial)
+	: state(initial)
+	{
+		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
+		assert(it != end(state)); // we must have a blank tile!
+		blank = &(*it);
+		assert(*blank == 0);
+		// these asserts dont catch if there is more than one 0 so our puzzle may still be invalid
 	}
 
 	const PuzzleState& State() const
@@ -346,76 +364,37 @@ public:
 
 	bool CheckValidMove(MOVE m)
 	{
-		switch (m)
-		{
-			case UP:
-				return GetMoveUp();
-			case DOWN:
-				return GetMoveDown();
-			case LEFT:
-				return GetMoveLeft();
-			case RIGHT:
-				return GetMoveRight();
-			default:
-				throw logic_error("Invalid movement command attempted");
-		}
+		return GetMove(m);
 	}
 
 	bool Move(MOVE m)
 	{
-		switch (m)
-		{
-			case UP:
-				return MoveUp();
-			case DOWN:
-				return MoveDown();
-			case LEFT:
-				return MoveLeft();
-			case RIGHT:
-				return MoveRight();
-			default:
-				throw logic_error("Invalid movement command attempted");
+		int* move = GetMove(m);
+		if (move) {
+			Swap(move);
+			return true;
 		}
+		return false;
 	}
 
 	bool MoveUp()
 	{
-		//cout << "move up" << endl;
-		if (int* swp = GetMoveUp()) {
-			Swap(swp);
-			return true;
-		}
-		return false;
+		return Move(UP);
 	}
 
 	bool MoveDown()
 	{
-		//cout << "move down" << endl;
-		if (int* swp = GetMoveDown()) {
-			Swap(swp);;
-			return true;
-		}
-		return false;
+		return Move(DOWN);
 	}
 
 	bool MoveLeft()
 	{
-		//cout << "move left" << endl;
-		if (int* swp = GetMoveLeft()) {
-			Swap(swp);
-			return true;
-		}
-		return false;
+		return Move(LEFT);
 	}
 
 	bool MoveRight()
 	{
-		//cout << "move right" << endl;
-		if (int* swp = GetMoveRight()) {
-			Swap(swp);
-			return true;
-		}
-		return false;
+		return Move(RIGHT);
 	}
 
 	friend ostream& operator<<(ostream& os, const Puzzle<N>& puzzle)
