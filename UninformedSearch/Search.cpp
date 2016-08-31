@@ -6,6 +6,7 @@
 #include <iostream>
 #include <queue>
 #include <random>
+#include <stack>
 #include <string>
 #include <unordered_set>
 
@@ -211,6 +212,7 @@ public:
 		return inversions % 2 == 0;
 	}
 
+	template< template< class T > class Strategy>
 	bool Solve(const PuzzleState& goal/* probably need to pass a strategy */)
 	{
 		struct Node {
@@ -258,10 +260,10 @@ public:
 			}
 		};
 
-
 		using NodePtr = shared_ptr<Node>;
 		// initialize the frontier with the start state
-		queue<NodePtr> frontier( {  make_shared<Node>(Node(state)) } );
+		Strategy<NodePtr> frontier;
+		frontier.Enqueue(make_shared<Node>(Node(state)));
 
 		auto hasher=[](const NodePtr& nodeptr){
 			return nodeptr->state.hash();
@@ -279,9 +281,9 @@ public:
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 		NodePtr current;
-		while (!frontier.empty()) {
-			current = frontier.front();
-			frontier.pop();
+		while (!frontier.Finished()) {
+			current = frontier.Next();
+			frontier.Dequeue();
 
 			if (explored.count(current)) {
 				continue;
@@ -293,8 +295,8 @@ public:
 
 			#define CHECK_NODE(dir) \
 			auto node_##dir = make_shared<Node>(Node(*current, dir)); \
-			if (explored.count(node_##dir) == 0) { \
-				frontier.push(node_##dir); \
+			if (explored.count(node_##dir) == 0 && frontier.TestHeuristics(node_##dir)) { \
+				frontier.Enqueue(node_##dir); \
 			}
 
 			// counterclockwise iteration?
@@ -422,13 +424,93 @@ public:
 	}
 };
 
+template <class Node>
+class PuzzleStrategy {
+public:
+	virtual bool TestHeuristics(const Node& node)
+	{
+		// override in subclasses to provide heuristics
+		return true;
+	}
+
+	virtual void Enqueue(const Node& node) = 0;
+	virtual void Dequeue() = 0;
+
+	virtual const Node& Next() const = 0;
+	virtual bool Finished() const = 0;
+};
+
+template <class Node>
+class QueueStrategy : public PuzzleStrategy<Node>
+{
+private:
+	queue<Node> frontier;
+
+public:
+
+	void Enqueue(const Node& node)
+	{
+		frontier.push(node);
+	}
+
+	void Dequeue()
+	{
+		frontier.pop();
+	}
+
+	const Node& Next() const
+	{
+		return frontier.front();
+	}
+
+	bool Finished() const
+	{
+		return frontier.empty();
+	}
+};
+
+template <class Node>
+class StackStrategy : public PuzzleStrategy<Node>
+{
+private:
+	stack<Node> frontier;
+
+public:
+
+	void Enqueue(const Node& node)
+	{
+		frontier.push(node);
+	}
+
+	void Dequeue()
+	{
+		frontier.pop();
+	}
+
+	const Node& Next() const
+	{
+		return frontier.top();
+	}
+
+	bool Finished() const
+	{
+		return frontier.empty();
+	}
+};
+
+template <class Node>
+using BreadthFirst = QueueStrategy<Node>;
+
+template <class Node>
+using DepthFirst = StackStrategy<Node>;
+
 using Puzzle8 = Puzzle<3>;
 
 void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution();
 	cout << "Puzzle has solution?: " << hasSolution << endl;
-	bool solved = puzzle.Solve(goal);
+	bool solved = puzzle.Solve<BreadthFirst>(goal);
 	cout << "Solved Puzzle:" << endl << puzzle << endl;
 	assert(solved == hasSolution);
 }
