@@ -522,11 +522,13 @@ int main()
 		return 1;
 	}
 
-	// Creates a 3x3 array to hold the puzzle
 	Puzzle8::PuzzleState state;
 	auto size = state.n;
+    // Use this int with a "bitmask"
+    int flags = 0;
+    
 	// The location of the zero (i.e. empty) tile.
-	int zero[2];
+    int zero[2] = {-1, -1};
 	int count = 0;
 	while (in && count <= 8)
 	{
@@ -542,10 +544,21 @@ int main()
 			else
 			{
 				state[count / size][count % size] = temp - '0';
+                // Use 2^(value - 1) as a bitmask of sorts to make sure all values have been entered and
+                // they are all valid (e.g. 1-8).
+                flags += pow(2, ( (temp - '0') - 1) );
 				++count;
 			}
 		}
 	};
+    // Check that the puzzle has all needed values
+    if( !(flags == 255 && zero[0] >= 0) )
+    {
+        cout << "The inputted puzzle was not valid. Puzzle was:" << endl;
+        cout << state << endl;
+        cin.get();
+        return 1;
+    }
 
 	Puzzle8::PuzzleState goal {{
 		{ 1, 2, 3 },
