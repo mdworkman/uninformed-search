@@ -249,7 +249,7 @@ public:
 					else {
 						parent->Trace(--i);
 
-						static const char* symbols[] = {"", "↑","↓","←","→"};
+						static const char* symbols[] = {"", "UP","DOWN","LEFT","RIGHT"};
 						cout << symbols[action] << endl;
 					}
 				} else {
