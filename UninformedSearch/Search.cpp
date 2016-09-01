@@ -13,6 +13,101 @@
 
 using namespace std;
 
+class PuzzleStrategy {
+public:
+	struct SearchNode {
+		// general node members
+		const size_t cost = 1;
+		const size_t depth = 0;
+
+		SearchNode(size_t cost, size_t depth)
+		: cost(cost), depth(depth) {}
+	};
+
+	using NodePtr = shared_ptr<const SearchNode>;
+
+	virtual bool TestHeuristics(const SearchNode& node)
+	{
+		// override in subclasses to provide heuristics
+		return true;
+	}
+
+	virtual void Enqueue(NodePtr) = 0;
+
+	void Enqueue(const SearchNode& node) {
+		Enqueue(make_shared<SearchNode>(node));
+	}
+
+	virtual void Dequeue() = 0;
+
+	virtual NodePtr Next() const = 0;
+	virtual bool Finished() const = 0;
+
+	template <class T>
+	shared_ptr<T> Next() const
+	{
+		return static_pointer_cast<T>(Next());
+	}
+};
+
+class QueueStrategy : public PuzzleStrategy
+{
+private:
+	queue<NodePtr> frontier;
+
+public:
+
+	void Enqueue(NodePtr node)
+	{
+		frontier.push(node);
+	}
+
+	void Dequeue()
+	{
+		frontier.pop();
+	}
+
+	NodePtr Next() const
+	{
+		return frontier.front();
+	}
+
+	bool Finished() const
+	{
+		return frontier.empty();
+	}
+};
+
+class StackStrategy : public PuzzleStrategy
+{
+private:
+	stack<NodePtr> frontier;
+
+public:
+
+	void Enqueue(NodePtr node)
+	{
+		frontier.push(node);
+	}
+
+	void Dequeue()
+	{
+		frontier.pop();
+	}
+
+	NodePtr Next() const
+	{
+		return frontier.top();
+	}
+
+	bool Finished() const
+	{
+		return frontier.empty();
+	}
+};
+
+using BreadthFirstSearch = QueueStrategy;
+using DepthFirstSearch = StackStrategy;
 template<size_t N>
 class Puzzle {
 public:
@@ -230,22 +325,20 @@ public:
 		return inversions % 2 == 0;
 	}
 
-	template< template< class T > class Strategy>
-	bool Solve(const PuzzleState& goal/* probably need to pass a strategy */)
+	bool Solve(const PuzzleState& goal, PuzzleStrategy& strategy)
 	{
-		struct Node {
+		struct Node : public PuzzleStrategy::SearchNode {
 			PuzzleState state;
 			const Node* parent = nullptr;
-			const size_t cost = 1;
 			const MOVE action;
 
 			// constructor for root node
 			Node(const PuzzleState& state)
-			: state(state), action(MOVE::NONE) {}
+			: PuzzleStrategy::SearchNode(0,0), state(state), action(MOVE::NONE) {}
 
 			// constructor for child nodes
 			Node(const Node& parent, MOVE action)
-			: parent(&parent), cost(parent.cost + 1), action(action)
+			: PuzzleStrategy::SearchNode(1, parent.depth + 1), parent(&parent), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
 				// less than ideal, but create a new puzzle with the parent state
@@ -278,11 +371,11 @@ public:
 			}
 		};
 
-		using NodePtr = shared_ptr<Node>;
+		using NodePtr = shared_ptr<const Node>;
 		// initialize the frontier with the start state
-		Strategy<NodePtr> frontier;
-		NodePtr current = make_shared<Node>(Node(state));
-		frontier.Enqueue(current);
+		PuzzleStrategy& frontier = strategy; // alias the strategy for easy to follow terminology
+		frontier.Enqueue(make_shared<Node>(Node(state)));
+		NodePtr current = frontier.Next<const Node>();
 
 		auto hasher=[](const NodePtr& nodeptr){
 			return nodeptr->state.hash();
@@ -300,7 +393,7 @@ public:
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 		while (!frontier.Finished()) {
-			current = frontier.Next();
+			current = frontier.Next<const Node>();
 			frontier.Dequeue();
 
 			if (explored.count(current)) {
@@ -313,7 +406,7 @@ public:
 
 			#define CHECK_NODE(dir) \
 			auto node_##dir = make_shared<Node>(Node(*current, dir)); \
-			if (explored.count(node_##dir) == 0 && frontier.TestHeuristics(node_##dir)) { \
+			if (explored.count(node_##dir) == 0 && strategy.TestHeuristics(*node_##dir)) { \
 				frontier.Enqueue(node_##dir); \
 			}
 
@@ -331,7 +424,7 @@ public:
 		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
 		// FIXME: not sure what "expanded nodes" means
 		cout << "Nodes explored:" << explored.size() << endl;
-		cout << "Depth of solution:" << current->cost << endl;
+		cout << "Depth of solution:" << current->depth << endl;
 
 		// update puzzle to current state (even if not solved)
 		state = current->state;
@@ -403,93 +496,14 @@ public:
 	}
 };
 
-template <class Node>
-class PuzzleStrategy {
-public:
-	virtual bool TestHeuristics(const Node& node)
-	{
-		// override in subclasses to provide heuristics
-		return true;
-	}
-
-	virtual void Enqueue(const Node& node) = 0;
-	virtual void Dequeue() = 0;
-
-	virtual const Node& Next() const = 0;
-	virtual bool Finished() const = 0;
-};
-
-template <class Node>
-class QueueStrategy : public PuzzleStrategy<Node>
-{
-private:
-	queue<Node> frontier;
-
-public:
-
-	void Enqueue(const Node& node)
-	{
-		frontier.push(node);
-	}
-
-	void Dequeue()
-	{
-		frontier.pop();
-	}
-
-	const Node& Next() const
-	{
-		return frontier.front();
-	}
-
-	bool Finished() const
-	{
-		return frontier.empty();
-	}
-};
-
-template <class Node>
-class StackStrategy : public PuzzleStrategy<Node>
-{
-private:
-	stack<Node> frontier;
-
-public:
-
-	void Enqueue(const Node& node)
-	{
-		frontier.push(node);
-	}
-
-	void Dequeue()
-	{
-		frontier.pop();
-	}
-
-	const Node& Next() const
-	{
-		return frontier.top();
-	}
-
-	bool Finished() const
-	{
-		return frontier.empty();
-	}
-};
-
-template <class Node>
-using BreadthFirst = QueueStrategy<Node>;
-
-template <class Node>
-using DepthFirst = StackStrategy<Node>;
-
 using Puzzle8 = Puzzle<3>;
 
 void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution();
 	cout << "Puzzle has solution?: " << hasSolution << endl;
-	bool solved = puzzle.Solve<BreadthFirst>(goal);
+	BreadthFirstSearch search;
+	bool solved = puzzle.Solve(goal, search);
 	cout << "Solved Puzzle:" << endl << puzzle << endl;
 	assert(solved == hasSolution);
 }
