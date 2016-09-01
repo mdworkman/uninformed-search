@@ -49,6 +49,13 @@ public:
 		return false;
 	};
 
+	virtual bool IsComplete()
+	{
+		// Is the search going to find a solution if one exists?
+		// override in subclasses that are not complete
+		return true;
+	}
+
 	template <class T>
 	shared_ptr<T> Next() const
 	{
@@ -126,6 +133,11 @@ public:
 	bool TestHeuristics(const SearchNode& node)
 	{
 		return (node.depth <= depth);
+	}
+
+	bool IsComplete()
+	{
+		return false;
 	}
 };
 
@@ -572,7 +584,7 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
 
 		cout << "Solved Puzzle:" << endl << *puzzleCopy << endl;
-		assert(solved == hasSolution);
+		assert(solved == hasSolution || strategy->IsComplete() == false);
 	}
 }
 
@@ -581,8 +593,8 @@ void Tests(const Puzzle8::PuzzleState& goal)
 	cout << "Running tests" << endl;
 	cout << goal << endl;
 	Puzzle8 testPuzzle(goal);
-	testPuzzle.Scramble(10);
-	assert(testPuzzle.HasSolution());
+	testPuzzle.Scramble(100);
+	assert(testPuzzle.HasSolution(goal));
 
 	AnalyzePuzzle(testPuzzle, goal);
 }
