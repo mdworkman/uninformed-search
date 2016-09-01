@@ -415,6 +415,7 @@ public:
 
 						static const char* symbols[] = {"", "UP","DOWN","LEFT","RIGHT"};
 						cout << symbols[action] << endl;
+						cout << state << endl;
 					}
 				} else {
 					cout << "Path taken to solve:" << endl;
