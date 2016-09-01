@@ -344,7 +344,8 @@ public:
 		// FIXME: technically we should examine our goal state
 		// this is hardcoded for our particular goal state :(
 
-		int inversions = *state.begin() - 1;
+		// the first tile always will have inversions equal to its value - 1, unless it is 0
+		int inversions = max(*state.begin() - 1, 0);
 		for (auto i = 1; i < state.size - 1; ++i)
 		{
 			const auto cell = state.nth(i);
