@@ -49,7 +49,7 @@ public:
 		return false;
 	};
 
-	virtual bool IsComplete()
+	virtual bool IsComplete() const
 	{
 		// Is the search going to find a solution if one exists?
 		// override in subclasses that are not complete
@@ -135,7 +135,7 @@ public:
 		return (node.depth <= depth);
 	}
 
-	bool IsComplete()
+	bool IsComplete() const
 	{
 		return false;
 	}
