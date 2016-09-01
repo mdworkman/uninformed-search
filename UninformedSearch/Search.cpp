@@ -529,6 +529,7 @@ void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		tie(strategy, message) = package;
 
 		Puzzle8 puzzleCopy(puzzle); // copy the puzzle so we can solve it multiple times
+		cout << "Solving with " << message << endl;
 		bool solved = puzzleCopy.Solve(goal, *strategy);
 		cout << "Solved Puzzle:" << endl << puzzleCopy << endl;
 		assert(solved == hasSolution);
