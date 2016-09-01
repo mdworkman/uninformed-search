@@ -118,6 +118,7 @@ using DepthFirstSearch = StackStrategy;
 class DepthLimitedSearch : public DepthFirstSearch {
 protected:
 	size_t depth;
+
 public:
 	DepthLimitedSearch(size_t depth)
 	: depth(depth) {}
@@ -129,7 +130,7 @@ public:
 };
 
 class IterativeDeepeningSearch : public DepthLimitedSearch {
-	size_t step = 1; // how much to increase the depth by
+	size_t step = 10; // how much to increase the depth by
 
 public:
 	IterativeDeepeningSearch(size_t depth)
@@ -339,7 +340,7 @@ public:
 	}
 
 	// we cant actually use this for anything but testing
-	bool HasSolution() const
+	bool HasSolution(const PuzzleState& /* goal */) const
 	{
 		// FIXME: technically we should examine our goal state
 		// this is hardcoded for our particular goal state :(
@@ -426,9 +427,7 @@ public:
 		// FIXME: I've no idea what a good size table is
 		unordered_set<NodePtr, decltype(hasher), decltype(equals)> explored(1000, hasher, equals);
 
-		cout << "Attempting to solve puzzle:" << endl << state << endl;
-		cout << "Beginning timer" << endl;
-		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
+
 
 		while (!frontier.Finished()) {
 			current = frontier.Next<const Node>();
@@ -457,17 +456,16 @@ public:
 			#undef CHECK_NODE
 		}
 
-		cout << "Finished: stopping timer." << endl;
-		chrono::steady_clock::time_point end = chrono::steady_clock::now();
-		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
-		// FIXME: not sure what "expanded nodes" means
-		cout << "Nodes explored:" << explored.size() << endl;
-		cout << "Depth of solution:" << current->depth << endl;
-
 		// update puzzle to current state (even if not solved)
 		state = current->state;
 
-		if (IsSolved(goal)) {
+		bool solved = IsSolved(goal);
+		// FIXME: not sure what "expanded nodes" means
+		cout << "Search complete: " << ((solved) ? "SUCCESS" : "FAILURE") << endl;
+		cout << "Nodes expanded:" << explored.size() << endl;
+		cout << "Depth of terminated search:" << current->depth << endl;
+
+		if (solved) {
 			// output the steps
 			current->Trace(100);
 			return true;
@@ -555,7 +553,11 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		tie(strategy, message) = package;
 
 		shared_ptr<Puzzle8> puzzleCopy;
-		cout << "Solving with " << message << endl;
+
+		cout << "Attempting to solve puzzle:" << endl << puzzle << endl;
+		cout << "Attempting to solve with " << message << endl;
+		cout << "Beginning timer" << endl;
+		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 		bool solved = false;
 		do {
@@ -563,8 +565,13 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 			// and use multiple different methods
 			puzzleCopy = make_shared<Puzzle8>(puzzle);
 			solved = puzzleCopy->Solve(goal, *strategy);
-		} while (!solved && !strategy->ExpandSearch());
-		cout << "Solved Puzzle:" << endl << puzzleCopy << endl;
+		} while (!solved && strategy->ExpandSearch());
+
+		cout << "Finished: stopping timer." << endl;
+		chrono::steady_clock::time_point end = chrono::steady_clock::now();
+		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
+
+		cout << "Solved Puzzle:" << endl << *puzzleCopy << endl;
 		assert(solved == hasSolution);
 	}
 }
