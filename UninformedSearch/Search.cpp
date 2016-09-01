@@ -516,10 +516,23 @@ void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution();
 	cout << "Puzzle has solution?: " << hasSolution << endl;
-	BreadthFirstSearch search;
-	bool solved = puzzle.Solve(goal, search);
-	cout << "Solved Puzzle:" << endl << puzzle << endl;
-	assert(solved == hasSolution);
+
+	vector<tuple<shared_ptr<PuzzleStrategy>,string>> strategies {{
+		make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch"),
+		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch")
+	}};
+
+	for (auto& package : strategies) {
+		shared_ptr<PuzzleStrategy> strategy;
+		string message;
+
+		tie(strategy, message) = package;
+
+		Puzzle8 puzzleCopy(puzzle); // copy the puzzle so we can solve it multiple times
+		bool solved = puzzleCopy.Solve(goal, *strategy);
+		cout << "Solved Puzzle:" << endl << puzzleCopy << endl;
+		assert(solved == hasSolution);
+	}
 }
 
 void Tests(const Puzzle8::PuzzleState& goal)
