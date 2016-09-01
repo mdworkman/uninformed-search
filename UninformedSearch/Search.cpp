@@ -42,6 +42,12 @@ public:
 
 	virtual NodePtr Next() const = 0;
 	virtual bool Finished() const = 0;
+	virtual bool ExpandSearch()
+	{
+		// by default most searches are complete and dont need expansion
+		// override in subclasses that need it
+		return false;
+	};
 
 	template <class T>
 	shared_ptr<T> Next() const
@@ -110,7 +116,7 @@ using BreadthFirstSearch = QueueStrategy;
 using DepthFirstSearch = StackStrategy;
 
 class DepthLimitedSearch : public DepthFirstSearch {
-private:
+protected:
 	size_t depth;
 public:
 	DepthLimitedSearch(size_t depth)
@@ -119,6 +125,23 @@ public:
 	bool TestHeuristics(const SearchNode& node)
 	{
 		return (node.depth <= depth);
+	}
+};
+
+class IterativeDeepeningSearch : public DepthLimitedSearch {
+	size_t step = 1; // how much to increase the depth by
+
+public:
+	IterativeDeepeningSearch(size_t depth)
+	: DepthLimitedSearch(depth) {}
+
+	bool ExpandSearch()
+	{
+		// FIXME: we need a max depth or we would loop infinitely on an unsolvable puzzle
+		// expand the depth and search again
+		depth += step;
+		cout << "Expanding search depth to " << depth << endl;
+		return true;
 	}
 };
 
@@ -512,14 +535,16 @@ public:
 
 using Puzzle8 = Puzzle<3>;
 
-void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
+void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
-	bool hasSolution = puzzle.HasSolution();
+	bool hasSolution = puzzle.HasSolution(goal);
 	cout << "Puzzle has solution?: " << hasSolution << endl;
 
 	vector<tuple<shared_ptr<PuzzleStrategy>,string>> strategies {{
 		make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch"),
-		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch")
+		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch"),
+		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(10)), "DepthLimitedSearch"),
+		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch")
 	}};
 
 	for (auto& package : strategies) {
@@ -528,9 +553,16 @@ void AnalyzePuzzle(Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 
 		tie(strategy, message) = package;
 
-		Puzzle8 puzzleCopy(puzzle); // copy the puzzle so we can solve it multiple times
+		shared_ptr<Puzzle8> puzzleCopy;
 		cout << "Solving with " << message << endl;
-		bool solved = puzzleCopy.Solve(goal, *strategy);
+
+		bool solved = false;
+		do {
+			// copy the puzzle so we can attempt to solve it multiple times
+			// and use multiple different methods
+			puzzleCopy = make_shared<Puzzle8>(puzzle);
+			solved = puzzleCopy->Solve(goal, *strategy);
+		} while (!solved && !strategy->ExpandSearch());
 		cout << "Solved Puzzle:" << endl << puzzleCopy << endl;
 		assert(solved == hasSolution);
 	}
