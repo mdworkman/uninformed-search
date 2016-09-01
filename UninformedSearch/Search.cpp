@@ -288,25 +288,25 @@ private:
 		//cout << "new state:" << endl << state;
 	}
 
-	int* GetMoveUp()
+	int* GetMoveDown()
 	{
 		int* swp = blank + state.n;
 		return (swp < state.end()) ? swp : nullptr;
 	}
 
-	int* GetMoveDown()
+	int* GetMoveUp()
 	{
 		int* swp = blank - state.n;
 		return (swp >= state.begin()) ? swp : nullptr;
 	}
 
-	int* GetMoveLeft()
+	int* GetMoveRight()
 	{
 		int* swp = blank + 1;
 		return (swp < state.end() && (swp - state.begin()) % state.n != 0) ? swp : nullptr;
 	}
 
-	int* GetMoveRight()
+	int* GetMoveLeft()
 	{
 		int* swp = blank - 1;
 		return (swp >= state.begin() && (state.end() - swp) % state.n != 1) ? swp : nullptr;
