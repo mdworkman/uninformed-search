@@ -584,7 +584,6 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
 		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
 
-		cout << "Solved Puzzle:" << endl << *puzzleCopy << endl;
 		assert(solved == hasSolution || strategy->IsComplete() == false);
 	}
 }
