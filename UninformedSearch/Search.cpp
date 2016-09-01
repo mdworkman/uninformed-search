@@ -279,7 +279,7 @@ private:
 
 	int* blank = nullptr;
 
-	void Swap(int* ptr)
+	void Swap(int*& ptr)
 	{
 		swap(*ptr, *blank);
 		blank = ptr;
