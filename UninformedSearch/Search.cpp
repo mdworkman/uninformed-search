@@ -108,6 +108,20 @@ public:
 
 using BreadthFirstSearch = QueueStrategy;
 using DepthFirstSearch = StackStrategy;
+
+class DepthLimitedSearch : public DepthFirstSearch {
+private:
+	size_t depth;
+public:
+	DepthLimitedSearch(size_t depth)
+	: depth(depth) {}
+
+	bool TestHeuristics(const SearchNode& node)
+	{
+		return (node.depth <= depth);
+	}
+};
+
 template<size_t N>
 class Puzzle {
 public:
