@@ -443,34 +443,31 @@ public:
 		explored.insert(current);
 		size_t expandedCount = 0;
 
+		auto ExpandNode=[&](MOVE direction){
+			auto newnode = make_shared<const Node>(Node(*current, direction));
+			auto foundit = explored.find(newnode);
+			auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr;
+			if (strategy.TestHeuristics(*newnode, found)) {
+				if (found) {
+					explored.erase(foundit);
+				}
+				explored.insert(newnode);
+				frontier.Enqueue(newnode);
+			}
+		};
+
 		while (!frontier.Finished()) {
 			current = frontier.Next<const Node>();
 			frontier.Dequeue();
 
 			if (current->state == goal) break;
 
-			#define CHECK_NODE(dir) \
-			{ \
-				auto newnode = make_shared<const Node>(Node(*current, dir)); \
-				auto foundit = explored.find(newnode); \
-				auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr; \
-				if (strategy.TestHeuristics(*newnode, found)) { \
-					if (found) { \
-						explored.erase(foundit); \
-					} \
-					explored.insert(newnode); \
-					frontier.Enqueue(newnode); \
-				} \
-			}
-
 			// counterclockwise iteration?
 			++expandedCount;
-			CHECK_NODE(UP);
-			CHECK_NODE(LEFT);
-			CHECK_NODE(DOWN);
-			CHECK_NODE(RIGHT);
-
-			#undef CHECK_NODE
+			ExpandNode(UP);
+			ExpandNode(LEFT);
+			ExpandNode(DOWN);
+			ExpandNode(RIGHT);
 		}
 
 		// update puzzle to current state (even if not solved)
