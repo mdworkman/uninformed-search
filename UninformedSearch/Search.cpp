@@ -26,10 +26,11 @@ public:
 
 	using NodePtr = shared_ptr<const SearchNode>;
 
-	virtual bool TestHeuristics(const SearchNode& node)
+	// existing is a node == to newnode or nullptr if no such node
+	virtual bool TestHeuristics(const SearchNode& newnode, const SearchNode* existing) const
 	{
 		// override in subclasses to provide heuristics
-		return true;
+		return bool(existing) == false;
 	}
 
 	virtual void Enqueue(NodePtr) = 0;
@@ -130,9 +131,9 @@ public:
 	DepthLimitedSearch(size_t depth)
 	: depth(depth) {}
 
-	bool TestHeuristics(const SearchNode& node)
+	bool TestHeuristics(const SearchNode& newnode, const SearchNode* existing) const
 	{
-		return (node.depth <= depth);
+		return (newnode.depth <= depth && (!existing || existing->depth > newnode.depth));
 	}
 
 	bool IsComplete() const
@@ -439,28 +440,31 @@ public:
 
 		// FIXME: I've no idea what a good size table is
 		unordered_set<NodePtr, decltype(hasher), decltype(equals)> explored(1000, hasher, equals);
-
-
+		explored.insert(current);
+		size_t expandedCount = 0;
 
 		while (!frontier.Finished()) {
 			current = frontier.Next<const Node>();
 			frontier.Dequeue();
 
-			if (explored.count(current)) {
-				continue;
-			}
-
-			explored.insert(current);
-
 			if (current->state == goal) break;
 
 			#define CHECK_NODE(dir) \
-			auto node_##dir = make_shared<Node>(Node(*current, dir)); \
-			if (explored.count(node_##dir) == 0 && strategy.TestHeuristics(*node_##dir)) { \
-				frontier.Enqueue(node_##dir); \
+			{ \
+				auto newnode = make_shared<const Node>(Node(*current, dir)); \
+				auto foundit = explored.find(newnode); \
+				auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr; \
+				if (strategy.TestHeuristics(*newnode, found)) { \
+					if (found) { \
+						explored.erase(foundit); \
+					} \
+					explored.insert(newnode); \
+					frontier.Enqueue(newnode); \
+				} \
 			}
 
 			// counterclockwise iteration?
+			++expandedCount;
 			CHECK_NODE(UP);
 			CHECK_NODE(LEFT);
 			CHECK_NODE(DOWN);
@@ -475,7 +479,7 @@ public:
 		bool solved = IsSolved(goal);
 		// FIXME: not sure what "expanded nodes" means
 		cout << "Search complete: " << ((solved) ? "SUCCESS" : "FAILURE") << endl;
-		cout << "Nodes expanded:" << explored.size() << endl;
+		cout << "Nodes expanded:" << expandedCount << endl;
 		cout << "Depth of terminated search:" << current->depth << endl;
 
 		if (solved) {
@@ -555,7 +559,8 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 	vector<tuple<shared_ptr<PuzzleStrategy>,string>> strategies {{
 		make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch"),
 		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch"),
-		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(10)), "DepthLimitedSearch"),
+		// 31 moves is the maximum number needed to solve an 8puzzle so we limit depth to be that
+		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch"),
 		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch")
 	}};
 
@@ -584,7 +589,7 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		chrono::steady_clock::time_point end = chrono::steady_clock::now();
 		cout << "Time taken: " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
 
-		assert(solved == hasSolution || strategy->IsComplete() == false);
+		assert(solved == hasSolution);
 	}
 }
 
