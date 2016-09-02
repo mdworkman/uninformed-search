@@ -415,7 +415,7 @@ public:
 						parent->Trace(--i);
 
 						static const char* symbols[] = {"", "UP","DOWN","LEFT","RIGHT"};
-						cout << symbols[action] << endl;
+						cout << depth << ": " << symbols[action] << endl;
 						cout << state << endl;
 					}
 				} else {
