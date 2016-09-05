@@ -22,6 +22,11 @@ public:
 
 		SearchNode(size_t cost, size_t depth)
 		: cost(cost), depth(depth) {}
+
+		bool operator<(const SearchNode& rhs) const
+		{
+			return cost < rhs.cost;
+		}
 	};
 
 	using NodePtr = shared_ptr<const SearchNode>;
@@ -139,6 +144,37 @@ public:
 	bool IsComplete() const
 	{
 		return false;
+	}
+};
+
+class HeuristicSearch : public PuzzleStrategy {
+private:
+	priority_queue<NodePtr, vector<NodePtr>, function<bool(NodePtr&, NodePtr&)>> frontier;
+
+public:
+	HeuristicSearch(/*function<bool(NodePtr, NodePtr)> comp*/)
+	: frontier([](NodePtr& lhs, NodePtr& rhs) {
+		return *lhs < *rhs;
+	}) {}
+
+	void Enqueue(NodePtr node)
+	{
+		frontier.push(node);
+	}
+
+	void Dequeue()
+	{
+		frontier.pop();
+	}
+
+	NodePtr Next() const
+	{
+		return frontier.top();
+	}
+
+	bool Finished() const
+	{
+		return frontier.empty();
 	}
 };
 
@@ -609,6 +645,8 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		// 31 moves is the maximum number needed to solve an 8puzzle so we limit depth to be that
 		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
 		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
+		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "ManhattanDistance", ManhattanDistance),
+		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "MisplacedTiles", MisplacedTiles)
 	}};
 
 	for (auto& package : strategies) {
