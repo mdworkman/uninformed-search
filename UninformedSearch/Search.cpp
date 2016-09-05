@@ -548,6 +548,50 @@ public:
 
 using Puzzle8 = Puzzle<3>;
 
+auto Puzzle8Search=[](const Puzzle8::PuzzleState& state, size_t i, int& row, int& col) {
+	auto beg = begin(state);
+	auto loc = find_if(beg, end(state), bind2nd(equal_to<int>(), i));
+	int dist = int(loc - beg);
+	row = dist / state.n;
+	col = dist % state.n;
+};
+
+int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
+{
+	int distance = 0;
+	// blank tile is not included
+	for (int i = 1; i < state.size; ++i)
+	{
+		int goalRow, goalCol;
+		Puzzle8Search(goal, i, goalRow, goalCol);
+
+		int stateRow, stateCol;
+		Puzzle8Search(state, i, stateRow, stateCol);
+
+		distance += abs(goalRow - stateRow) + abs(goalCol - stateCol);
+	}
+	assert(distance >= 0);
+	return distance;
+}
+
+int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
+{
+	int count = 0;
+	// blank tile is not included
+	for (int i = 1; i < state.size; ++i)
+	{
+		int goalRow, goalCol;
+		Puzzle8Search(goal, i, goalRow, goalCol);
+
+		int stateRow, stateCol;
+		Puzzle8Search(state, i, stateRow, stateCol);
+
+		count += bool(goalRow != stateRow || goalCol != stateCol);
+	}
+	assert(count >= 0);
+	return count;
+}
+
 void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution(goal);
@@ -602,7 +646,7 @@ void Tests(const Puzzle8::PuzzleState& goal)
 }
 
 int main()
-{
+{/*
 	string file_name = "";
 	cout << "Enter a file name to read a puzzle from." << endl;
 	if (!(cin >> file_name))
@@ -655,6 +699,12 @@ int main()
         cin.get();
         return 1;
     }
+*/
+	Puzzle8::PuzzleState state {{
+		{ 0, 1, 3 },
+		{ 8, 2, 6 },
+		{ 4, 5, 7 }
+	}};
 
 	Puzzle8::PuzzleState goal {{
 		{ 1, 2, 3 },
