@@ -275,6 +275,8 @@ public:
 		}
 	};
 
+	using CostCalc = function<int(const PuzzleState&, const PuzzleState&)>;
+
 private:
 	PuzzleState state;
 
@@ -377,7 +379,10 @@ public:
 		return inversions % 2 == 0;
 	}
 
-	bool Solve(const PuzzleState& goal, PuzzleStrategy& strategy)
+	bool Solve(const PuzzleState& goal, PuzzleStrategy& strategy,
+			   CostCalc valuator = [](const PuzzleState&, const PuzzleState&) {
+				   return 1;
+			   })
 	{
 		struct Node : public PuzzleStrategy::SearchNode {
 			PuzzleState state;
@@ -596,20 +601,22 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution(goal);
 	cout << "Puzzle has solution?: " << hasSolution << endl;
+	Puzzle8::CostCalc defaultValue;
 
-	vector<tuple<shared_ptr<PuzzleStrategy>,string>> strategies {{
-		make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch"),
-		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch"),
+	vector<tuple<shared_ptr<PuzzleStrategy>,string,Puzzle8::CostCalc>> strategies {{
+		make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch", defaultValue),
+		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch", defaultValue),
 		// 31 moves is the maximum number needed to solve an 8puzzle so we limit depth to be that
-		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch"),
-		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch")
+		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
+		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
 	}};
 
 	for (auto& package : strategies) {
 		shared_ptr<PuzzleStrategy> strategy;
 		string message;
+		Puzzle8::CostCalc valueator;
 
-		tie(strategy, message) = package;
+		tie(strategy, message, valueator) = package;
 
 		shared_ptr<Puzzle8> puzzleCopy;
 
