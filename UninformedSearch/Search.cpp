@@ -174,13 +174,13 @@ public:
 		static constexpr auto n = N;
 		static constexpr auto size = N*N;
 
-		int state[N][N] = {};
+		char state[N][N] = {};
 
 		PuzzleState() = default;
 
 		PuzzleState(initializer_list<decltype(state)> l)
 		{
-			const int* start = &l.begin()[0][0][0];
+			const auto start = &l.begin()[0][0][0];
 			copy(start, start + size, begin());
 		}
 
@@ -228,7 +228,7 @@ public:
 		}
 
 		using iterator = decltype(&state[0][0]);
-		using const_iterator = const int*;
+		using const_iterator = const char*;
 
 		// providing iterators so we can easily navigate the 2d array as a flat structure
 		iterator begin()
@@ -268,7 +268,7 @@ public:
 				if (i && i % state.n == 0) {
 					cout << endl;
 				}
-				cout << *state.nth(i);
+				cout << static_cast<int>(*state.nth(i));
 			}
 			cout << endl;
 			return os;
@@ -278,9 +278,9 @@ public:
 private:
 	PuzzleState state;
 
-	int* blank = nullptr;
+	char* blank = nullptr;
 
-	void Swap(int*& ptr)
+	void Swap(char*& ptr)
 	{
 		swap(*ptr, *blank);
 		blank = ptr;
@@ -289,31 +289,31 @@ private:
 		//cout << "new state:" << endl << state;
 	}
 
-	int* GetMoveDown()
+	char* GetMoveDown()
 	{
-		int* swp = blank + state.n;
+		char* swp = blank + state.n;
 		return (swp < state.end()) ? swp : nullptr;
 	}
 
-	int* GetMoveUp()
+	char* GetMoveUp()
 	{
-		int* swp = blank - state.n;
+		char* swp = blank - state.n;
 		return (swp >= state.begin()) ? swp : nullptr;
 	}
 
-	int* GetMoveRight()
+	char* GetMoveRight()
 	{
-		int* swp = blank + 1;
+		char* swp = blank + 1;
 		return (swp < state.end() && (swp - state.begin()) % state.n != 0) ? swp : nullptr;
 	}
 
-	int* GetMoveLeft()
+	char* GetMoveLeft()
 	{
-		int* swp = blank - 1;
+		char* swp = blank - 1;
 		return (swp >= state.begin() && (state.end() - swp) % state.n != 1) ? swp : nullptr;
 	}
 
-	int* GetMove(MOVE m)
+	char* GetMove(MOVE m)
 	{
 		switch (m)
 		{
@@ -335,7 +335,7 @@ public:
 	Puzzle(const PuzzleState& initial)
 	: state(initial)
 	{
-		auto it = find_if(begin(state), end(state), bind2nd(equal_to<int>(), 0));
+		auto it = find_if(begin(state), end(state), bind2nd(equal_to<char>(), 0));
 		assert(it != end(state)); // we must have a blank tile!
 		blank = &(*it);
 		assert(*blank == 0);
@@ -367,7 +367,7 @@ public:
 
 			// no tile is smaller than 1 (since blank tile is *always* ignored in this calculation
 			if (val > 1) {
-				size_t matches = count_if(cell+1, state.end(), [&val](const int& v) {
+				size_t matches = count_if(cell+1, state.end(), [&val](const char& v) {
 					return v && v < val;
 				});
 				assert(matches < state.size - i);
@@ -512,7 +512,7 @@ public:
 
 	bool Move(MOVE m)
 	{
-		int* move = GetMove(m);
+		char* move = GetMove(m);
 		if (move) {
 			Swap(move);
 			return true;
