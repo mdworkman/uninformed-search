@@ -17,7 +17,7 @@ class PuzzleStrategy {
 public:
 	struct SearchNode {
 		// general node members
-		const size_t cost = 1;
+		size_t cost = 1;
 		const size_t depth = 0;
 
 		SearchNode(size_t cost, size_t depth)
@@ -430,7 +430,7 @@ public:
 			: PuzzleStrategy::SearchNode(0,0), state(state), action(MOVE::NONE) {}
 
 			// constructor for child nodes
-			Node(const Node& parent, MOVE action)
+			Node(const Node& parent, MOVE action, function<int(const PuzzleState&)> calc)
 			: PuzzleStrategy::SearchNode(1, parent.depth + 1), parent(&parent), action(action)
 			{
 				assert(action); // dont accept NONE as a valid sequence
@@ -439,6 +439,7 @@ public:
 				Puzzle puzzle(parent.state);
 				puzzle.Move(action);
 				state = puzzle.State();
+				cost = calc(state);
 			}
 
 			bool operator==(const Node& rhs) const
@@ -485,7 +486,8 @@ public:
 		size_t expandedCount = 0;
 
 		auto ExpandNode=[&](MOVE direction){
-			auto newnode = make_shared<const Node>(Node(*current, direction));
+			using namespace placeholders;
+			auto newnode = make_shared<const Node>(Node(*current, direction, bind(valuator, _1, goal)));
 			auto foundit = explored.find(newnode);
 			auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr;
 			if (strategy.TestHeuristics(*newnode, found)) {
@@ -652,9 +654,9 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 	for (auto& package : strategies) {
 		shared_ptr<PuzzleStrategy> strategy;
 		string message;
-		Puzzle8::CostCalc valueator;
+		Puzzle8::CostCalc valuator;
 
-		tie(strategy, message, valueator) = package;
+		tie(strategy, message, valuator) = package;
 
 		shared_ptr<Puzzle8> puzzleCopy;
 
@@ -668,7 +670,11 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 			// copy the puzzle so we can attempt to solve it multiple times
 			// and use multiple different methods
 			puzzleCopy = make_shared<Puzzle8>(puzzle);
-			solved = puzzleCopy->Solve(goal, *strategy);
+			if (valuator) {
+				solved = puzzleCopy->Solve(goal, *strategy, valuator);
+			} else {
+				solved = puzzleCopy->Solve(goal, *strategy);
+			}
 		} while (!solved && strategy->ExpandSearch());
 
 		cout << "Finished: stopping timer." << endl;
