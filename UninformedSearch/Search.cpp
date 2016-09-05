@@ -548,7 +548,7 @@ public:
 
 using Puzzle8 = Puzzle<3>;
 
-auto Puzzle8Search=[](const Puzzle8::PuzzleState& state, size_t i, int& row, int& col) {
+void Puzzle8Search(const Puzzle8::PuzzleState& state, size_t i, int& row, int& col) {
 	auto beg = begin(state);
 	auto loc = find_if(beg, end(state), bind2nd(equal_to<int>(), i));
 	int dist = int(loc - beg);
