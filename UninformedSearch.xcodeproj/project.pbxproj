@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		71590F9D1D7F1387005A2F04 /* Puzzle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Puzzle.h; path = UninformedSearch/Puzzle.h; sourceTree = SOURCE_ROOT; };
 		716932771D7161B30089159D /* UninformedSearch */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = UninformedSearch; sourceTree = BUILT_PRODUCTS_DIR; };
 		716932811D7161FE0089159D /* Search.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Search.cpp; path = UninformedSearch/Search.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -58,6 +59,7 @@
 			isa = PBXGroup;
 			children = (
 				716932811D7161FE0089159D /* Search.cpp */,
+				71590F9D1D7F1387005A2F04 /* Puzzle.h */,
 			);
 			name = UninformedSearch;
 			path = "/Users/ballred/School/CS4470-AI/UninformedSearch/UninformedSearch/UninformedSearch";
