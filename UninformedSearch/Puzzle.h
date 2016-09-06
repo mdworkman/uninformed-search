@@ -26,6 +26,8 @@ public:
 		{
 			return cost > rhs.cost;
 		}
+
+		virtual void Trace(size_t i) const {};
 	};
 
 	using NodePtr = std::shared_ptr<const SearchNode>;
@@ -460,12 +462,11 @@ public:
 
 			void Trace(size_t i) const
 			{
-				const Node* p = static_cast<const Node*>(parent);
-				if (p) {
+				if (parent) {
 					if (i == 0)
 						std::cout << "Truncated trace route:" << std::endl;
 					else {
-						p->Trace(--i);
+						parent->Trace(--i);
 
 						static const char* symbols[] = {"", "UP","DOWN","LEFT","RIGHT"};
 						std::cout << depth << ": " << symbols[action] << std::endl;
