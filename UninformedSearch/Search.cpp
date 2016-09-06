@@ -23,9 +23,9 @@ public:
 		SearchNode(size_t cost, size_t depth)
 		: cost(cost), depth(depth) {}
 
-		bool operator<(const SearchNode& rhs) const
+		bool operator>(const SearchNode& rhs) const
 		{
-			return cost < rhs.cost;
+			return cost > rhs.cost;
 		}
 	};
 
@@ -154,7 +154,7 @@ private:
 public:
 	HeuristicSearch(/*function<bool(NodePtr, NodePtr)> comp*/)
 	: frontier([](NodePtr& lhs, NodePtr& rhs) {
-		return *lhs < *rhs;
+		return *lhs > *rhs;
 	}) {}
 
 	void Enqueue(NodePtr node)
@@ -631,7 +631,7 @@ int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState
 
 		count += bool(goalRow != stateRow || goalCol != stateCol);
 	}
-	assert(count >= 0);
+	assert(count >= 0 && count < state.size);
 	return count;
 }
 
