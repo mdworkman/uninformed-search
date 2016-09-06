@@ -73,9 +73,13 @@ public:
 class QueueStrategy : public PuzzleStrategy
 {
 private:
-	std::queue<NodePtr> frontier;
+	std::priority_queue<NodePtr, std::vector<NodePtr>, std::function<bool(NodePtr&, NodePtr&)>> frontier;
 
 public:
+	QueueStrategy(/*function<bool(NodePtr, NodePtr)> comp*/)
+	: frontier([](NodePtr& lhs, NodePtr& rhs) {
+		return *lhs > *rhs;
+	}) {}
 
 	void Enqueue(NodePtr node)
 	{
@@ -89,7 +93,7 @@ public:
 
 	NodePtr Next() const
 	{
-		return frontier.front();
+		return frontier.top();
 	}
 
 	bool Finished() const
@@ -145,37 +149,6 @@ public:
 	bool IsComplete() const
 	{
 		return false;
-	}
-};
-
-class HeuristicSearch : public PuzzleStrategy {
-private:
-	std::priority_queue<NodePtr, std::vector<NodePtr>, std::function<bool(NodePtr&, NodePtr&)>> frontier;
-
-public:
-	HeuristicSearch(/*function<bool(NodePtr, NodePtr)> comp*/)
-	: frontier([](NodePtr& lhs, NodePtr& rhs) {
-		return *lhs > *rhs;
-	}) {}
-
-	void Enqueue(NodePtr node)
-	{
-		frontier.push(node);
-	}
-
-	void Dequeue()
-	{
-		frontier.pop();
-	}
-
-	NodePtr Next() const
-	{
-		return frontier.top();
-	}
-
-	bool Finished() const
-	{
-		return frontier.empty();
 	}
 };
 

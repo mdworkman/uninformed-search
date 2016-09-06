@@ -72,9 +72,9 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		// 31 moves is the maximum number needed to solve an 8puzzle so we limit depth to be that
 		//make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
 		//make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
-		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "ManhattanDistance", ManhattanDistance),
-		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
-		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "MisplacedTiles", MisplacedTiles)
+		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistance", ManhattanDistance),
+		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
+		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "MisplacedTiles", MisplacedTiles)
 	}};
 
 	for (auto& package : strategies) {
