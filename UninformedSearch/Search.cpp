@@ -265,6 +265,30 @@ public:
 			return h;
 		}
 
+		int Inversions(const PuzzleState& /*goal*/) const
+		{
+			// FIXME: technically we should examine our goal state
+			// this is hardcoded for our particular goal state :(
+
+			// the first tile always will have inversions equal to its value - 1, unless it is 0
+			int inversions = max(*begin() - 1, 0);
+			for (auto i = 1; i < size - 1; ++i)
+			{
+				const auto cell = nth(i);
+				const auto val = *cell;
+
+				// no tile is smaller than 1 (since blank tile is *always* ignored in this calculation
+				if (val > 1) {
+					size_t matches = count_if(cell+1, end(), [&val](const char& v) {
+						return v && v < val;
+					});
+					assert(matches < size - i);
+					inversions += matches;
+				}
+			}
+			return inversions;
+		}
+
 		using iterator = decltype(&state[0][0]);
 		using const_iterator = const char*;
 
@@ -393,28 +417,9 @@ public:
 	}
 
 	// we cant actually use this for anything but testing
-	bool HasSolution(const PuzzleState& /* goal */) const
+	bool HasSolution(const PuzzleState& goal) const
 	{
-		// FIXME: technically we should examine our goal state
-		// this is hardcoded for our particular goal state :(
-
-		// the first tile always will have inversions equal to its value - 1, unless it is 0
-		int inversions = max(*state.begin() - 1, 0);
-		for (auto i = 1; i < state.size - 1; ++i)
-		{
-			const auto cell = state.nth(i);
-			const auto val = *cell;
-
-			// no tile is smaller than 1 (since blank tile is *always* ignored in this calculation
-			if (val > 1) {
-				size_t matches = count_if(cell+1, state.end(), [&val](const char& v) {
-					return v && v < val;
-				});
-				assert(matches < state.size - i);
-				inversions += matches;
-			}
-		}
-		return inversions % 2 == 0;
+		return state.Inversions(goal) % 2 == 0;
 	}
 
 	bool Solve(const PuzzleState& goal, PuzzleStrategy& strategy,
@@ -626,6 +631,11 @@ int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleSt
 	return distance;
 }
 
+int ManhattanDistanceInversions(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
+{
+	return ManhattanDistance(state, goal) + state.Inversions(goal)/2;
+}
+
 int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
 {
 	int count = 0;
@@ -657,6 +667,7 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
 		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
 		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "ManhattanDistance", ManhattanDistance),
+		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
 		make_tuple( make_shared<HeuristicSearch>(HeuristicSearch()), "MisplacedTiles", MisplacedTiles)
 	}};
 
