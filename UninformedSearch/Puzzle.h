@@ -22,11 +22,6 @@ public:
 		: parent(parent), cost(cost),
 		depth((parent) ? parent->depth + 1 : 0) {}
 
-		bool operator>(const SearchNode& rhs) const
-		{
-			return cost > rhs.cost;
-		}
-
 		virtual void Trace(size_t i) const {};
 	};
 
@@ -39,16 +34,30 @@ public:
 		return bool(existing) == false;
 	}
 
-	virtual void Enqueue(NodePtr) = 0;
-
 	void Enqueue(const SearchNode& node) {
 		Enqueue(std::make_shared<SearchNode>(node));
 	}
 
-	virtual void Dequeue() = 0;
+	void Enqueue(NodePtr node)
+	{
+		frontier.push(node);
+	}
 
-	virtual NodePtr Next() const = 0;
-	virtual bool Finished() const = 0;
+	void Dequeue()
+	{
+		frontier.pop();
+	}
+
+	NodePtr Next() const
+	{
+		return frontier.top();
+	}
+
+	bool Finished() const
+	{
+		return frontier.empty();
+	}
+
 	virtual bool ExpandSearch()
 	{
 		// by default most searches are complete and dont need expansion
@@ -68,66 +77,30 @@ public:
 	{
 		return std::static_pointer_cast<T>(Next());
 	}
+
+	PuzzleStrategy(std::function<bool(NodePtr&, NodePtr&)> comp)
+	: frontier(comp) {}
+
+private:
+	std::priority_queue<NodePtr, std::vector<NodePtr>, std::function<bool(NodePtr&, NodePtr&)>> frontier;
 };
 
 class QueueStrategy : public PuzzleStrategy
 {
-private:
-	std::priority_queue<NodePtr, std::vector<NodePtr>, std::function<bool(NodePtr&, NodePtr&)>> frontier;
-
 public:
-	QueueStrategy(/*function<bool(NodePtr, NodePtr)> comp*/)
-	: frontier([](NodePtr& lhs, NodePtr& rhs) {
-		return *lhs > *rhs;
+	QueueStrategy()
+	: PuzzleStrategy([](NodePtr& lhs, NodePtr& rhs)-> bool {
+		return bool(lhs->cost > rhs->cost);
 	}) {}
-
-	void Enqueue(NodePtr node)
-	{
-		frontier.push(node);
-	}
-
-	void Dequeue()
-	{
-		frontier.pop();
-	}
-
-	NodePtr Next() const
-	{
-		return frontier.top();
-	}
-
-	bool Finished() const
-	{
-		return frontier.empty();
-	}
 };
 
 class StackStrategy : public PuzzleStrategy
 {
-private:
-	std::stack<NodePtr> frontier;
-
 public:
-
-	void Enqueue(NodePtr node)
-	{
-		frontier.push(node);
-	}
-
-	void Dequeue()
-	{
-		frontier.pop();
-	}
-
-	NodePtr Next() const
-	{
-		return frontier.top();
-	}
-
-	bool Finished() const
-	{
-		return frontier.empty();
-	}
+	StackStrategy()
+	: PuzzleStrategy([](NodePtr& lhs, NodePtr& rhs) {
+	return bool(lhs->depth < rhs->depth);
+	}) {}
 };
 
 using BreadthFirstSearch = QueueStrategy;
