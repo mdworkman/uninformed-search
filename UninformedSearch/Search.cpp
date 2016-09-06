@@ -7,6 +7,8 @@
 
 #include "Puzzle.h"
 
+#define TEST_ITERATIONS 0
+
 using namespace std;
 
 using Puzzle8 = Puzzle<3>;
@@ -124,6 +126,17 @@ void Tests(const Puzzle8::PuzzleState& goal)
 
 int main()
 {
+	Puzzle8::PuzzleState goal {{
+		{ 1, 2, 3 },
+		{ 4, 5, 6 },
+		{ 7, 8, 0 }
+	}};
+#if TEST_ITERATIONS
+	int i = TEST_ITERATIONS;
+	while (i--) {
+		Tests(goal);
+	}
+#else
 	string file_name = "";
 	cout << "Enter a file name to read a puzzle from." << endl;
 	if (!(cin >> file_name))
@@ -176,26 +189,10 @@ int main()
         cin.get();
         return 1;
     }
-/*
-	Puzzle8::PuzzleState state {{
-		{ 0, 1, 3 },
-		{ 8, 2, 6 },
-		{ 4, 5, 7 }
-	}};
-*/
-	Puzzle8::PuzzleState goal {{
-		{ 1, 2, 3 },
-		{ 4, 5, 6 },
-		{ 7, 8, 0 }
-	}};
-
-	int i = 100;
-	while (i--) {
-		Tests(goal);
-	}
 
 	Puzzle8 puzzle(state);
 	AnalyzePuzzle(puzzle, goal);
+#endif
 
 	return 0;
 }
