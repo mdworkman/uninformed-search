@@ -17,11 +17,13 @@ class PuzzleStrategy {
 public:
 	struct SearchNode {
 		// general node members
-		size_t cost = 1;
+		const SearchNode* parent = nullptr;
+		const size_t cost = 1;
 		const size_t depth = 0;
 
-		SearchNode(size_t cost, size_t depth)
-		: cost(cost), depth(depth) {}
+		SearchNode(const SearchNode* parent, size_t cost)
+		: parent(parent), cost(cost),
+		depth((parent) ? parent->depth + 1 : 0) {}
 
 		bool operator>(const SearchNode& rhs) const
 		{
@@ -421,26 +423,32 @@ public:
 			   })
 	{
 		struct Node : public PuzzleStrategy::SearchNode {
-			PuzzleState state;
-			const Node* parent = nullptr;
-			const MOVE action;
-
-			// constructor for root node
-			Node(const PuzzleState& state)
-			: PuzzleStrategy::SearchNode(0,0), state(state), action(MOVE::NONE) {}
-
-			// constructor for child nodes
-			Node(const Node& parent, MOVE action, function<int(const PuzzleState&)> calc)
-			: PuzzleStrategy::SearchNode(1, parent.depth + 1), parent(&parent), action(action)
+		private:
+			static PuzzleState PuzzleStateFromDir(MOVE action, const PuzzleStrategy::SearchNode& parent)
 			{
 				assert(action); // dont accept NONE as a valid sequence
 				// less than ideal, but create a new puzzle with the parent state
 				// manipulate it, then destroy it
-				Puzzle puzzle(parent.state);
+				const Node& p = static_cast<const Node&>(parent);
+				Puzzle puzzle(p.state);
 				puzzle.Move(action);
-				state = puzzle.State();
-				cost = calc(state);
+				return puzzle.State();
 			}
+
+			Node(const PuzzleState& state, const Node& parent, MOVE action, function<int(const PuzzleState&)> calc)
+			: state(state), PuzzleStrategy::SearchNode(&parent, calc(state)), action(action) {}
+
+		public:
+			const PuzzleState state;
+			const MOVE action;
+
+			// constructor for root node
+			Node(const PuzzleState& state)
+			: PuzzleStrategy::SearchNode(nullptr,0), state(state), action(MOVE::NONE) {}
+
+			// constructor for child nodes
+			Node(const Node& parent, MOVE action, function<int(const PuzzleState&)> calc)
+			: Node(PuzzleStateFromDir(action, parent), parent, action, calc) {}
 
 			bool operator==(const Node& rhs) const
 			{
@@ -450,11 +458,12 @@ public:
 
 			void Trace(size_t i) const
 			{
-				if (parent) {
+				const Node* p = static_cast<const Node*>(parent);
+				if (p) {
 					if (i == 0)
 						cout << "Truncated trace route:" << endl;
 					else {
-						parent->Trace(--i);
+						p->Trace(--i);
 
 						static const char* symbols[] = {"", "UP","DOWN","LEFT","RIGHT"};
 						cout << depth << ": " << symbols[action] << endl;
