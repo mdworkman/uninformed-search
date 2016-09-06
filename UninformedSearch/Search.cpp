@@ -69,11 +69,11 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 	Puzzle8::CostCalc defaultValue;
 
 	vector<tuple<shared_ptr<PuzzleStrategy>,string,Puzzle8::CostCalc>> strategies {{
-		//make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch", defaultValue),
-		//make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch", defaultValue),
+		make_tuple( make_shared<BreadthFirstSearch>(BreadthFirstSearch()), "BreadthFirstSearch", defaultValue),
+		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch", defaultValue),
 		// 31 moves is the maximum number needed to solve an 8puzzle so we limit depth to be that
-		//make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
-		//make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
+		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
+		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistance", ManhattanDistance),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
 		make_tuple( make_shared<ManhattanDepthLimitedSearch>(ManhattanDepthLimitedSearch(31)), "ManhattanDepthLimitedSearch", ManhattanDistance),
