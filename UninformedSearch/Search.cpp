@@ -50,6 +50,12 @@ int ManhattanDistanceInversions(const Puzzle8::PuzzleState& state, const Puzzle8
 	return ManhattanDistance(state, goal, cumulativeCost) + state.Inversions(goal)/2;
 }
 
+int ManhattanDistanceGreedy(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal, int cumulativeCost)
+{
+	// greedy doesnt care about the cost to arrive at this point
+	return ManhattanDistance(state, goal, 0);
+}
+
 int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal, int cumulativeCost)
 {
 	int count = 0;
@@ -84,6 +90,7 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistance", ManhattanDistance),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
+		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceGreedy", ManhattanDistanceGreedy),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "MisplacedTiles", MisplacedTiles)
 	}};
 
