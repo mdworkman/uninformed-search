@@ -13,12 +13,16 @@ using namespace std;
 
 using Puzzle8 = Puzzle<3>;
 
-void Puzzle8Search(const Puzzle8::PuzzleState& state, size_t i, int& row, int& col) {
+bool Puzzle8Search(const Puzzle8::PuzzleState& state, char i, int& row, int& col) {
 	auto beg = begin(state);
-	auto loc = find_if(beg, end(state), bind2nd(equal_to<int>(), i));
-	int dist = int(loc - beg);
-	row = dist / state.n;
-	col = dist % state.n;
+	auto loc = find_if(beg, end(state), bind2nd(equal_to<char>(), i));
+	if (loc != state.end()) {
+		int dist = int(loc - beg);
+		row = dist / state.n;
+		col = dist % state.n;
+		return true;
+	}
+	return false;
 };
 
 int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
@@ -28,10 +32,12 @@ int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleSt
 	for (int i = 1; i < state.size; ++i)
 	{
 		int goalRow, goalCol;
-		Puzzle8Search(goal, i, goalRow, goalCol);
+		bool found = Puzzle8Search(goal, i, goalRow, goalCol);
+		assert(found);
 
 		int stateRow, stateCol;
-		Puzzle8Search(state, i, stateRow, stateCol);
+		found = Puzzle8Search(state, i, stateRow, stateCol);
+		assert(found);
 
 		distance += abs(goalRow - stateRow) + abs(goalCol - stateCol);
 	}
@@ -51,10 +57,12 @@ int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState
 	for (int i = 1; i < state.size; ++i)
 	{
 		int goalRow, goalCol;
-		Puzzle8Search(goal, i, goalRow, goalCol);
+		bool found = Puzzle8Search(goal, i, goalRow, goalCol);
+		assert(found);
 
 		int stateRow, stateCol;
-		Puzzle8Search(state, i, stateRow, stateCol);
+		found = Puzzle8Search(state, i, stateRow, stateCol);
+		assert(found);
 
 		count += bool(goalRow != stateRow || goalCol != stateCol);
 	}
