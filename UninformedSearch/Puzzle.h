@@ -455,7 +455,7 @@ public:
 		// FIXME: I've no idea what a good size table is
 		std::unordered_set<NodePtr, decltype(hasher), decltype(equals)> explored(1000, hasher, equals);
 		explored.insert(current);
-		size_t expandedCount = 0;
+		size_t expandedCount = 0, createdCount = 1;
 
 		auto ExpandNode=[&](MOVE direction){
 			using namespace std::placeholders;
@@ -468,6 +468,7 @@ public:
 				}
 				explored.insert(newnode);
 				frontier.Enqueue(newnode);
+				++createdCount;
 			}
 		};
 
@@ -492,6 +493,7 @@ public:
 		// FIXME: not sure what "expanded nodes" means
 		std::cout << "Search complete: " << ((solved) ? "SUCCESS" : "FAILURE") << std::endl;
 		std::cout << "Nodes expanded:" << expandedCount << std::endl;
+		std::cout << "Nodes created:" << createdCount << std::endl;
 		std::cout << "Depth of terminated search:" << current->depth << std::endl;
 
 		if (solved) {
