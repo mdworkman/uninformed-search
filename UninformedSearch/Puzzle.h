@@ -142,20 +142,6 @@ public:
 	}
 };
 
-class ManhattanDepthLimitedSearch : public QueueStrategy {
-	size_t depth;
-
-public:
-	ManhattanDepthLimitedSearch(size_t depth)
-	: QueueStrategy(), depth(depth) {}
-
-	bool TestHeuristics(const SearchNode& newnode, const SearchNode* existing) const
-	{
-		size_t minDepthNeeded = newnode.depth + newnode.cost;
-		return (minDepthNeeded <= depth && (!existing || existing->depth > newnode.depth));
-	}
-};
-
 template<size_t N>
 class Puzzle {
 public:

@@ -76,7 +76,6 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistance", ManhattanDistance),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
-		make_tuple( make_shared<ManhattanDepthLimitedSearch>(ManhattanDepthLimitedSearch(31)), "ManhattanDepthLimitedSearch", ManhattanDistance),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "MisplacedTiles", MisplacedTiles)
 	}};
 
