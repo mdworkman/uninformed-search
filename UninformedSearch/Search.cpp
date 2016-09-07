@@ -25,7 +25,7 @@ bool Puzzle8Search(const Puzzle8::PuzzleState& state, char i, int& row, int& col
 	return false;
 };
 
-int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
+int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal, int cumulativeCost)
 {
 	int distance = 0;
 	// blank tile is not included
@@ -42,15 +42,15 @@ int ManhattanDistance(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleSt
 		distance += abs(goalRow - stateRow) + abs(goalCol - stateCol);
 	}
 	assert(distance >= 0);
-	return distance;
+	return distance + cumulativeCost;
 }
 
-int ManhattanDistanceInversions(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
+int ManhattanDistanceInversions(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal, int cumulativeCost)
 {
-	return ManhattanDistance(state, goal) + state.Inversions(goal)/2;
+	return ManhattanDistance(state, goal, cumulativeCost) + state.Inversions(goal)/2;
 }
 
-int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal)
+int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState& goal, int cumulativeCost)
 {
 	int count = 0;
 	// blank tile is not included
@@ -67,7 +67,7 @@ int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState
 		count += bool(goalRow != stateRow || goalCol != stateCol);
 	}
 	assert(count >= 0 && count < state.size);
-	return count;
+	return count + cumulativeCost;
 }
 
 void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)

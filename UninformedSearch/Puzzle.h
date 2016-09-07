@@ -282,7 +282,7 @@ public:
 		}
 	};
 
-	using CostCalc = std::function<int(const PuzzleState&, const PuzzleState&)>;
+	using CostCalc = std::function<int(const PuzzleState&, const PuzzleState&, int)>;
 
 private:
 	PuzzleState state;
@@ -368,7 +368,7 @@ public:
 	}
 
 	bool Solve(const PuzzleState& goal, PuzzleStrategy& strategy,
-			   CostCalc valuator = [](const PuzzleState&, const PuzzleState&) {
+			   CostCalc valuator = [](const PuzzleState&, const PuzzleState&, int) {
 				   return 1;
 			   })
 	{
@@ -445,7 +445,7 @@ public:
 
 		auto ExpandNode=[&](MOVE direction){
 			using namespace std::placeholders;
-			auto newnode = std::make_shared<const Node>(Node(*current, direction, bind(valuator, _1, goal)));
+			auto newnode = std::make_shared<const Node>(Node(*current, direction, bind(valuator, _1, goal, current->depth+1)));
 			auto foundit = explored.find(newnode);
 			auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr;
 			if (strategy.TestHeuristics(*newnode, found)) {
