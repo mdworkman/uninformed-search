@@ -368,8 +368,8 @@ public:
 	}
 
 	bool Solve(const PuzzleState& goal, PuzzleStrategy& strategy,
-			   CostCalc valuator = [](const PuzzleState&, const PuzzleState&, int) {
-				   return 1;
+			   CostCalc valuator = [](const PuzzleState&, const PuzzleState&, int cumulativeCost) {
+				   return cumulativeCost;
 			   })
 	{
 		struct Node : public PuzzleStrategy::SearchNode {
