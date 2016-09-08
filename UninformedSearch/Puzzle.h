@@ -71,6 +71,11 @@ public:
 		// override in subclasses that are not complete
 		return true;
 	}
+    
+    virtual bool IsBiDirectional() const
+    {
+        return false;
+    }
 
 	template <class T>
 	std::shared_ptr<T> Next() const
@@ -145,6 +150,7 @@ class BiDirectionalSearch : public BreadthFirstSearch {
 
 public:
 	BiDirectionalSearch() : BreadthFirstSearch() {}
+    bool IsBiDirectional() const override { return true; }
 };
 
 template<size_t N>
@@ -465,8 +471,7 @@ public:
 
 		// Tried implementing the BiDirectionalSearch in a more efficient way, but I wasted a lot of time trying to 
 		// get it to work as elegantly as the other searches. This is repetitive and inefficient, but should work.
-		bool bidirectional = (frontier == BiDirectionalSearch);
-		if (bidirectional)
+        if (frontier.IsBiDirectional())
 		{
 			PuzzleStrategy& goalFrontier = strategy;
 			std::unordered_set<NodePtr, decltype(hasher), decltype(equals)> goalExplored(1000, hasher, equals);
@@ -497,13 +502,13 @@ public:
 
 				if (current->state == goalCurrent->state) break;
 				// Other end conditions: the current node on one direction has been visited on the other direction. 
-				if (explored.find(*goalCurrent) != explored.end())
+                if (explored.find(std::make_shared<const Node>(Node(*goalCurrent))) != explored.end())
 				{
 					// TODO:
 					// If the current "backwards" node has been visited by the forwards search, set the forward search to that previously visited node.
 					break;
 				}
-				if (goalExplored.find(*current) != goalExplored.end())
+                if (goalExplored.find(std::make_shared<const Node>(Node(*current))) != goalExplored.end())
 				{
 					// TODO:
 					// If the current forwards node has been visited in the other direction, set the backwards search to that previous node.
@@ -521,7 +526,7 @@ public:
 				GoalExpandNode(RIGHT);
 
 				state = current->state;
-				goalState = goalCurrent->state;
+				auto goalState = goalCurrent->state;
 			}
 
 			// This should the the state where the searches meet unless something went wrong.
