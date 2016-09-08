@@ -4,6 +4,10 @@
 #include <queue>
 #include <stack>
 #include <string>
+#include <unordered_set>
+#include <memory>
+#include <tuple>
+#include <functional>
 
 #include "Puzzle.h"
 
@@ -79,7 +83,14 @@ int MisplacedTiles(const Puzzle8::PuzzleState& state, const Puzzle8::PuzzleState
 void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 {
 	bool hasSolution = puzzle.HasSolution(goal);
-	cout << "Puzzle has solution?: " << hasSolution << endl;
+	if (!hasSolution)
+	{
+		cout << "Puzzle has no solution." << endl;
+		cin.ignore();
+		cin.get();
+		return;
+	}
+	cout << "Puzzle has a solution." << endl;
 	Puzzle8::CostCalc defaultValue;
 
 	vector<tuple<shared_ptr<PuzzleStrategy>,string,Puzzle8::CostCalc>> strategies {{
@@ -87,7 +98,8 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		make_tuple( make_shared<DepthFirstSearch>(DepthFirstSearch()), "DepthFirstSearch", defaultValue),
 		// 31 moves is the maximum number needed to solve an 8puzzle so we limit depth to be that
 		make_tuple( make_shared<DepthLimitedSearch>(DepthLimitedSearch(31)), "DepthLimitedSearch", defaultValue),
-		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(10)), "IterativeDeepeningSearch", defaultValue),
+		make_tuple( make_shared<IterativeDeepeningSearch>(IterativeDeepeningSearch(1)), "IterativeDeepeningSearch", defaultValue),
+		make_tuple( make_shared<BiDirectionalSearch>(BiDirectionalSearch()), "BiDirectionalSearch", defaultValue),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistance", ManhattanDistance),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceInversions", ManhattanDistanceInversions),
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "ManhattanDistanceGreedy", ManhattanDistanceGreedy),
@@ -157,6 +169,8 @@ int main()
 	if (!(cin >> file_name))
 	{
 		cout << "\nThe file name was invalid." << endl;
+		cin.ignore();
+		cin.get();
 		return 1;
 	}
 
@@ -164,6 +178,8 @@ int main()
 	if (!in)
 	{
 		cout << "The file was not found or could not be opened." << endl;
+		cin.ignore();
+		cin.get();
 		return 1;
 	}
 
@@ -201,6 +217,7 @@ int main()
     {
         cout << "The inputted puzzle was not valid. Puzzle was:" << endl;
         cout << state << endl;
+		cin.ignore();
         cin.get();
         return 1;
     }
@@ -209,5 +226,7 @@ int main()
 	AnalyzePuzzle(puzzle, goal);
 #endif
 
+	cin.ignore();
+	cin.get();
 	return 0;
 }

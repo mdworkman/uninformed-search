@@ -126,7 +126,6 @@ public:
 };
 
 class IterativeDeepeningSearch : public DepthLimitedSearch {
-	size_t step = 10; // how much to increase the depth by
 
 public:
 	IterativeDeepeningSearch(size_t depth)
@@ -136,10 +135,16 @@ public:
 	{
 		// FIXME: we need a max depth or we would loop infinitely on an unsolvable puzzle
 		// expand the depth and search again
-		depth += step;
+		++depth;
 		std::cout << "Expanding search depth to " << depth << std::endl;
 		return true;
 	}
+};
+
+class BiDirectionalSearch : public BreadthFirstSearch {
+
+public:
+	BiDirectionalSearch() : BreadthFirstSearch() {}
 };
 
 template<size_t N>
@@ -458,6 +463,83 @@ public:
 			}
 		};
 
+		// Tried implementing the BiDirectionalSearch in a more efficient way, but I wasted a lot of time trying to 
+		// get it to work as elegantly as the other searches. This is repetitive and inefficient, but should work.
+		bool bidirectional = (frontier == BiDirectionalSearch);
+		if (bidirectional)
+		{
+			PuzzleStrategy& goalFrontier = strategy;
+			std::unordered_set<NodePtr, decltype(hasher), decltype(equals)> goalExplored(1000, hasher, equals);
+			goalFrontier.Enqueue(std::make_shared<Node>(Node(goal)));
+			NodePtr goalCurrent = goalFrontier.Next<const Node>();
+			goalExplored.insert(goalCurrent);
+
+			auto GoalExpandNode = [&](MOVE direction) {
+				using namespace std::placeholders;
+				auto newnode = std::make_shared<const Node>(Node(*goalCurrent, direction, bind(valuator, _1, state, goalCurrent->depth + 1)));
+				auto foundit = goalExplored.find(newnode);
+				auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr;
+				if (strategy.TestHeuristics(*newnode, found)) {
+					if (found) {
+						goalExplored.erase(foundit);
+					}
+					goalExplored.insert(newnode);
+					goalFrontier.Enqueue(newnode);
+					++createdCount;
+				}
+			};
+
+			while (!frontier.Finished() || !goalFrontier.Finished()) {
+				current = frontier.Next<const Node>();
+				goalCurrent = goalFrontier.Next<const Node>();
+				frontier.Dequeue();
+				goalFrontier.Dequeue();
+
+				if (current->state == goalCurrent->state) break;
+				// Other end conditions: the current node on one direction has been visited on the other direction. 
+				if (explored.find(*goalCurrent) != explored.end())
+				{
+					// TODO:
+					// If the current "backwards" node has been visited by the forwards search, set the forward search to that previously visited node.
+					break;
+				}
+				if (goalExplored.find(*current) != goalExplored.end())
+				{
+					// TODO:
+					// If the current forwards node has been visited in the other direction, set the backwards search to that previous node.
+					break;
+				}
+
+				expandedCount += 2;
+				ExpandNode(UP);
+				GoalExpandNode(UP);
+				ExpandNode(LEFT);
+				GoalExpandNode(LEFT);
+				ExpandNode(DOWN);
+				GoalExpandNode(DOWN);
+				ExpandNode(RIGHT);
+				GoalExpandNode(RIGHT);
+
+				state = current->state;
+				goalState = goalCurrent->state;
+			}
+
+			// This should the the state where the searches meet unless something went wrong.
+			state = current->state;
+			bool solved = true;
+			std::cout << "Search complete: " << ((solved) ? "SUCCESS" : "FAILURE") << std::endl;
+			std::cout << "Nodes expanded:" << expandedCount << std::endl;
+			std::cout << "Nodes created:" << createdCount << std::endl;
+			std::cout << "Depth of terminated search:" << current->depth << std::endl;
+
+			// TODO:
+			// Output the path. Needs to be a combination of the forwards path and then an inversion of the backwards path.
+
+
+			// Bidirectional search is guaranteed to find an answer to a solvable puzzle, so this will always return true;
+			return true;
+		}
+
 		while (!frontier.Finished()) {
 			current = frontier.Next<const Node>();
 			frontier.Dequeue();
@@ -483,8 +565,8 @@ public:
 		std::cout << "Depth of terminated search:" << current->depth << std::endl;
 
 		if (solved) {
-			// output the steps
-			current->Trace(100);
+			// output the steps--only need the last 40
+			current->Trace(40);
 			return true;
 		}
 		return false;
