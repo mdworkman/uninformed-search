@@ -142,8 +142,6 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 
 void Tests(const Puzzle8::PuzzleState& goal)
 {
-	cout << "Running tests" << endl;
-	cout << goal << endl;
 	Puzzle8 testPuzzle(goal);
 	testPuzzle.Scramble(100);
 	assert(testPuzzle.HasSolution(goal));
@@ -159,6 +157,8 @@ int main()
 		{ 7, 8, 0 }
 	}};
 #if TEST_ITERATIONS
+	cout << "Running tests with goal:" << endl << goal << endl;
+
 	int i = TEST_ITERATIONS;
 	while (i--) {
 		Tests(goal);
