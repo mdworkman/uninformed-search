@@ -23,6 +23,7 @@ public:
 		depth((parent) ? parent->depth + 1 : 0) {}
 
 		virtual void Trace(size_t i) const {};
+        virtual void InverseTrace(size_t i) const {};
 	};
 
 	using NodePtr = std::shared_ptr<const SearchNode>;
@@ -433,6 +434,25 @@ public:
 					std::cout << "Path taken to solve:" << std::endl;
 				}
 			}
+            
+            // To get the correct move from the "backwards" search it has to have the order and value reversed.
+            // ex. from the goal state, the moves UP, LEFT, DOWN, RIGHT would be LEFT, UP, RIGHT, DOWN.
+            void InverseTrace(size_t i) const
+            {
+                static const size_t max = i;
+                if( parent) {
+                    if( i == 0)
+                        std::cout << "Truncated trace route:" << std::endl;
+                    else {
+                        static const char* inverseSymbols[] = {"", "DOWN", "UP", "RIGHT", "LEFT"};
+                        std::cout << max + (max - depth) << ": " << inverseSymbols[action] << std::endl;
+                        std::cout << state << std::endl;
+                        parent->InverseTrace(--i);
+                    }
+                } else {
+                    std::cout << "Path taken to solve:" << std::endl;
+                }
+            }
 		};
 
 		using NodePtr = std::shared_ptr<const Node>;
@@ -473,7 +493,7 @@ public:
 		// get it to work as elegantly as the other searches. This is repetitive and inefficient, but should work.
         if (frontier.IsBiDirectional())
 		{
-			PuzzleStrategy& goalFrontier = strategy;
+            BreadthFirstSearch goalFrontier;
 			std::unordered_set<NodePtr, decltype(hasher), decltype(equals)> goalExplored(1000, hasher, equals);
 			goalFrontier.Enqueue(std::make_shared<Node>(Node(goal)));
 			NodePtr goalCurrent = goalFrontier.Next<const Node>();
@@ -504,14 +524,17 @@ public:
 				// Other end conditions: the current node on one direction has been visited on the other direction. 
                 if (explored.find(std::make_shared<const Node>(Node(*goalCurrent))) != explored.end())
 				{
-					// TODO:
 					// If the current "backwards" node has been visited by the forwards search, set the forward search to that previously visited node.
+                    auto iter = explored.find(std::make_shared<const Node>(Node(*goalCurrent)));
+                    current = *iter;
+                    
 					break;
 				}
                 if (goalExplored.find(std::make_shared<const Node>(Node(*current))) != goalExplored.end())
 				{
-					// TODO:
 					// If the current forwards node has been visited in the other direction, set the backwards search to that previous node.
+                    auto iter = goalExplored.find(std::make_shared<const Node>(Node(*current)));
+                    goalCurrent = *iter;
 					break;
 				}
 
@@ -524,22 +547,21 @@ public:
 				GoalExpandNode(DOWN);
 				ExpandNode(RIGHT);
 				GoalExpandNode(RIGHT);
-
-				state = current->state;
-				auto goalState = goalCurrent->state;
 			}
 
 			// This should the the state where the searches meet unless something went wrong.
 			state = current->state;
-			bool solved = true;
-			std::cout << "Search complete: " << ((solved) ? "SUCCESS" : "FAILURE") << std::endl;
+			std::cout << "Search complete: SUCCESS" << std::endl;
 			std::cout << "Nodes expanded:" << expandedCount << std::endl;
 			std::cout << "Nodes created:" << createdCount << std::endl;
-			std::cout << "Depth of terminated search:" << current->depth << std::endl;
+			std::cout << "Total depth of terminated search:" << (current->depth + goalCurrent->depth) << std::endl;
 
-			// TODO:
-			// Output the path. Needs to be a combination of the forwards path and then an inversion of the backwards path.
-
+            // Output the path.
+            // If the backwards search had a depth of less than 40, also print the forwards search path to that point.
+            // This should always be true, since a bi-directional search ought to always find an optimal solution.
+            if( goalCurrent->depth < 40 )
+                current->Trace(40 - goalCurrent->depth);
+            goalCurrent->InverseTrace(goalCurrent->depth);
 
 			// Bidirectional search is guaranteed to find an answer to a solvable puzzle, so this will always return true;
 			return true;

@@ -106,6 +106,7 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		make_tuple( make_shared<QueueStrategy>(QueueStrategy()), "MisplacedTiles", MisplacedTiles)
 	}};
 
+    cout << "Attempting to solve puzzle:" << endl << puzzle << endl;
 	for (auto& package : strategies) {
 		shared_ptr<PuzzleStrategy> strategy;
 		string message;
@@ -114,9 +115,8 @@ void AnalyzePuzzle(const Puzzle8& puzzle, const Puzzle8::PuzzleState& goal)
 		tie(strategy, message, valuator) = package;
 
 		shared_ptr<Puzzle8> puzzleCopy;
-
-		cout << "Attempting to solve puzzle:" << endl << puzzle << endl;
-		cout << "Attempting to solve with " << message << endl;
+		
+		cout << "\nAttempting to solve with " << message << endl;
 		cout << "Beginning timer" << endl;
 		chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
@@ -226,6 +226,7 @@ int main()
 	AnalyzePuzzle(puzzle, goal);
 #endif
 
+    cout << "All searches are finished.";
 	cin.ignore();
 	cin.get();
 	return 0;
