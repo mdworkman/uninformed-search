@@ -199,7 +199,7 @@ public:
 
 		bool operator==(const PuzzleState& rhs) const
 		{
-			// we dont have to check *all* the elements
+			// we don't have to check *all* the elements
 			// since each puzzle alwyas has the same numbers we only have to check n - 1
 			for (auto i = 0; i < size - 1; ++i)
 			{
@@ -437,22 +437,23 @@ public:
             
             // To get the correct move from the "backwards" search it has to have the order and value reversed.
             // ex. from the goal state, the moves UP, LEFT, DOWN, RIGHT would be LEFT, UP, RIGHT, DOWN.
-            void InverseTrace(size_t i) const
-            {
-                static const size_t max = i;
-                if( parent) {
-                    if( i == 0)
-                        std::cout << "Truncated trace route:" << std::endl;
-                    else {
-                        static const char* inverseSymbols[] = {"", "DOWN", "UP", "RIGHT", "LEFT"};
-                        std::cout << max + (max - depth) << ": " << inverseSymbols[action] << std::endl;
-                        std::cout << state << std::endl;
-                        parent->InverseTrace(--i);
-                    }
-                } else {
-                    std::cout << "Path taken to solve:" << std::endl;
-                }
-            }
+			void InverseTrace(size_t i) const
+			{
+				static const size_t max = i;
+				static const char* inverseSymbols[] = { "", "DOWN", "UP", "RIGHT", "LEFT" };
+				if (max == i)
+				{
+					std::cout << max + (max - depth) + (max % 2 == 0 ? 1 : 0) << ": " << inverseSymbols[action] << std::endl;
+				}
+				else {
+					std::cout << state << std::endl;
+					if (i != 0)
+						std::cout << max + (max - depth) + (max % 2 == 0 ? 1 : 0) << ": " << inverseSymbols[action] << std::endl;
+				}
+				if (parent) {
+					parent->InverseTrace(--i);
+				}
+			}
 		};
 
 		using NodePtr = std::shared_ptr<const Node>;
@@ -490,7 +491,7 @@ public:
 		};
 
 		// Tried implementing the BiDirectionalSearch in a more efficient way, but I wasted a lot of time trying to 
-		// get it to work as elegantly as the other searches. This is repetitive and inefficient, but should work.
+		// get it to work as elegantly as the other searches. This is repetitive and inefficient, but it works.
         if (frontier.IsBiDirectional())
 		{
             BreadthFirstSearch goalFrontier;
@@ -503,7 +504,7 @@ public:
 				using namespace std::placeholders;
 				auto newnode = std::make_shared<const Node>(Node(*goalCurrent, direction, bind(valuator, _1, state, goalCurrent->depth + 1)));
 				auto foundit = goalExplored.find(newnode);
-				auto found = (foundit != explored.end()) ? (*foundit).get() : nullptr;
+				auto found = (foundit != goalExplored.end()) ? (*foundit).get() : nullptr;
 				if (strategy.TestHeuristics(*newnode, found)) {
 					if (found) {
 						goalExplored.erase(foundit);
@@ -549,18 +550,15 @@ public:
 				GoalExpandNode(RIGHT);
 			}
 
-			// This should the the state where the searches meet unless something went wrong.
+			// This should the the state where the searches meet unless something went horribly wrong.
 			state = current->state;
 			std::cout << "Search complete: SUCCESS" << std::endl;
 			std::cout << "Nodes expanded:" << expandedCount << std::endl;
 			std::cout << "Nodes created:" << createdCount << std::endl;
-			std::cout << "Total depth of terminated search:" << (current->depth + goalCurrent->depth) << std::endl;
+			std::cout << "Total depth of search:" << (current->depth + goalCurrent->depth) << std::endl;
 
             // Output the path.
-            // If the backwards search had a depth of less than 40, also print the forwards search path to that point.
-            // This should always be true, since a bi-directional search ought to always find an optimal solution.
-            if( goalCurrent->depth < 40 )
-                current->Trace(40 - goalCurrent->depth);
+            current->Trace(current->depth);
             goalCurrent->InverseTrace(goalCurrent->depth);
 
 			// Bidirectional search is guaranteed to find an answer to a solvable puzzle, so this will always return true;

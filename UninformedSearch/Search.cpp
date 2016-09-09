@@ -1,3 +1,6 @@
+// Project 1 & 2: Uninformed and Informed Search
+// Brad Allred and Miranda Workman
+// We didn't plagiarize, all code is our own.
 
 #include <chrono>
 #include <fstream>
